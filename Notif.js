@@ -64,7 +64,7 @@ const formatDate = (date) => {
 
 
   useEffect(() => {
-	Axios.post("http://192.168.8.103:19001/getNotifDisplay",{
+	Axios.post("http://192.168.8.103:19001/getNotifDisplayFinal",{
 	  user:user
 	})
 	  // .then((res) => setData(res.data.results[0]))
@@ -136,9 +136,9 @@ const handleRefresh = () => {
 };
 
 
-const NotifStatusRead = (notifStatusID) => {
+const NotifStatusRead = (notifID) => {
     Axios.post("http://192.168.8.103:19001/NotifStatusRead", {
-		notifStatusID:notifStatusID,
+		notifID:notifID,
 
     })
       .then((res) =>  
@@ -194,22 +194,20 @@ const[notifid, setnotifid] = useState([]);
 		// console.log(notifid)
 
 		  navigation.navigate("InvestorsInfo", { user_id: [item.user_id_reciever], notif_id: [item.notif_id], buss_id: [item.user_buss_id],invst_id: [item.invst_id] }),
-		  NotifStatusRead(item.invst_id)
+		  NotifStatusRead(item.notif_id)
 
 		 
 
 			}}
 			>
 		    <Image  
-		  style={styles.image}
-		//   rounded source={item.photo}
-		 rounded source={require("./assets/prrofilee.png")}>
-		  </Image> 
-
+  			style={styles.image}
+  			source={item.investorProfile ? { uri: item.investorProfile } : require("./assets/prrofilee.png")}
+			/>
 
 		  <View style={styles.content}>
 		  <View style={styles.contentHeader}>
-            <Text style={styles.name}>{item.user_id_reciever} {item.notif_id} {item.user_buss_id} {item.invst_id} {item.user_fname} {item.user_lname}</Text>
+            <Text style={styles.name}> {item.notif_id} {item.user_buss_id} {item.invst_id} {item.investors_fname} {item.investors_lname}</Text> 
             <Text style={styles.time}> {formatDate(item.notif_created_at)}</Text>
 		  </View>
 		  <Text rkType="primary3 mediumLine">{item.notif_content}</Text>

@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 import { Button, FlatList, StyleSheet, Text, View, ToastAndroid, Image, TextInput, TouchableOpacity, Platform } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import { AntDesign } from '@expo/vector-icons';
+import {NETWORK_ADD} from '@env';
 
 export default function Login() {
-
+  const networkAdd = NETWORK_ADD;
+console.log(networkAdd)
   const navigation = useNavigation();
 
   const [email, setEmail] = useState("");
@@ -46,8 +48,8 @@ export default function Login() {
 
 
   const Login = () => {
-    Axios.post("http://192.168.8.103:19001/testLogin", {
-      // Axios.post(`${process.env.REACT_APP_NETWORK_ADD}:19001/testLogin`, {
+    // Axios.post("http://192.168.8.103:19001/testLogin", {
+      Axios.post(`${NETWORK_ADD}:19001/testLogin`, {
       email: email,
       pass: pass,
     })
@@ -112,7 +114,7 @@ export default function Login() {
         }
         else if(Platform.OS === "android"){
 
-          if(res.data.results[0].user_type == "Entreprenuer" ){
+          if(res.data.results[0].user_type == "entreprenuer" ){
             handleSubmit(res.data.results[0].user_id),
             ToastAndroid.show("Welcome Entreprenuer!",
             ToastAndroid.SHORT,ToastAndroid.BOTTOM),
@@ -121,7 +123,7 @@ export default function Login() {
     
   
           }
-          else if (res.data.results[0].user_type == "Investor" ){
+          else if (res.data.results[0].user_type == "investor" ){
   
             handleSubmit(res.data.results[0].user_id),
             ToastAndroid.show("Welcome Investor!",
@@ -190,6 +192,8 @@ export default function Login() {
         placeholder="Username"
         onChangeText={(text) => setEmail(text)}
         value={email}
+        autoCapitalize="none"
+
       />
 
     </View>
@@ -202,6 +206,7 @@ export default function Login() {
         secureTextEntry={secureTextEntry}
         onChangeText={text => setPass(text)}
           placeholder="Password"
+          autoCapitalize="none"
           value={pass}
       />
       <TouchableOpacity

@@ -18,8 +18,9 @@ import { useNavigation } from '@react-navigation/native';
 
 
 
-const Paypal = ({hidePopup}) => {
+const Paypal = ({data, hidePopup}) => {
   const navigation = useNavigation();
+  const amountInputted = data[0];
 
   const [showGateway, setShowGateway] = useState(false);
   const [prog, setProg] = useState(false);
@@ -162,7 +163,6 @@ const[user, setUser] = useState('');
 
 function onMessage(e) {
   let data = e.nativeEvent.data;
-
   // Parse the JSON string into a JavaScript object
   try {
     const parsedData = JSON.parse(data);
@@ -170,19 +170,19 @@ function onMessage(e) {
     // Access purchase_units
     const purchaseUnit = parsedData?.purchase_units?.[0] ?? {};
     // console.log("Purchase Unit Reference ID: " + (purchaseUnit.reference_id ?? 'N/A'));
-    const amount =((purchaseUnit.amount?.value ?? 'N/A'));
+    const amount = ((purchaseUnit.amount?.value ?? 'N/A'));
     console.log(amount);
 
     // Access payer information
     const payer = parsedData?.payer ?? {};
     const name = ((payer.name?.given_name ?? 'N/A') + " " + (payer.name?.surname ?? 'N/A'));
     const email = ((payer.email_address ?? 'N/A'));
-    const type = "deposite"
+    const type = "invest"
     console.log(user);
 
 
-//for wallet
-    Axios.post("http://192.168.8.103:19001/wallet", {
+//for transaction
+    Axios.post("http://192.168.8.103:19001/TransactionInvest", {
       user:user,
       amount: amount,
       type:type,
@@ -194,10 +194,9 @@ function onMessage(e) {
   
       .then((res) =>  
       {
-  
         if(res.data.success)
         {
-          ToastAndroid.show("Sucessfully deposite!",
+          ToastAndroid.show("Sucessfully invested!",
           ToastAndroid.SHORT,ToastAndroid.BOTTOM),
           navigation.navigate("Home")
         }
@@ -254,7 +253,9 @@ function onMessage(e) {
               </View>
             </View>
             <WebView
-              source={{ uri: "https://timely-tiramisu-0a768c.netlify.app/" }}
+              // source={{ uri: `https://timely-tiramisu-0a768c.netlify.app/?amount=${amountInputted}` }}
+              source={{ uri: `http://192.168.8.103:3000/?amount=${amountInputted}` }}
+
               style={{ flex: 1 }}
               onLoadStart={() => {
                 setProg(true);
@@ -270,6 +271,9 @@ function onMessage(e) {
               }}
               onLoad={() => {
                 setProg(false);
+              }}
+              onError={(error) =>{
+                console.log(error)
               }}
             />
           </View>

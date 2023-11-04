@@ -1,4 +1,6 @@
-import { View, Text, TouchableOpacity, Alert, StyleSheet, Image, TextInput, ToastAndroid} from 'react-native'
+import { View, Text, TouchableOpacity, 
+  Alert, StyleSheet, Image, TextInput, 
+  ToastAndroid, ScrollView} from 'react-native'
 import React from 'react'
 import { Modal } from 'react-native-paper';
 import {useState,useEffect} from 'react';
@@ -7,6 +9,8 @@ import Axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Slider from '@react-native-community/slider';
 import { Loan } from 'loanjs';
+import Paypal from './Paypal';
+
 
 
 export default function Invest({data, hidePopup}) {
@@ -16,25 +20,27 @@ export default function Invest({data, hidePopup}) {
     const[amountInvest, setAmountInvest] = useState("");
     const [interest, setInterest] = useState(0);
     const [interestRate, setinterestRate] = useState(0);
-
     const [month, setMonth] = useState("");
     const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-  const [capitalDisply, setCapitalDisply] = useState(null);
+    const [endDate, setEndDate] = useState(null);
+    const [capitalDisply, setCapitalDisply] = useState(null);
 
-  const userbussID = data[2];
-  const senderID = data[1];
-  const capital = data[0];
+    const userbussID = data[2];
+    const senderID = data[1];
+    const capital = data[0];
 
   
- const msg = " Requested to invest to your business"
+ const msg = "Requested to invest to your business"
 
   // const [senderID,setsenderID] = useState(route.params.userID) 
   // const [userbussID,setuserbussID] = useState(route.params.bussID) 
 
   const[user, setUser] = useState('');
   const[dataID, setData] = useState([]);
-  const notifMsg = dataID + msg;
+  const notifMsg = dataID + ' ' + msg;
+  // const type = 'investment'
+
+
 
   useEffect(() => {
     async function fecthUser(){
@@ -70,28 +76,28 @@ export default function Invest({data, hidePopup}) {
 
 
 
-const hndlePercent = (e) => {
-  console.log(e);
-  setPercent(e)
-  const capital = data[0];
-  const selectpersent = parseInt(e)/100;
-  const interestRate = selectpersent *10;
+// const hndlePercent = (e) => {
+//   console.log(e);
+//   setPercent(e)
+//   const capital = data[0];
+//   const selectpersent = parseInt(e)/100;
+//   const interestRate = selectpersent *10;
 
-  const amount = selectpersent*capital;
-  // const percentRetrn = selectpersent * 10;
-  // const percentt = percentRetrn/100;
-  // const interst = capital * percentt * month;
-// setInterest(interst);
-setAmountInvest(amount);
-// setPercentReturn(percentRetrn);
-setCapitalDisply(capital)
+//   const amount = selectpersent*capital;
+//   // const percentRetrn = selectpersent * 10;
+//   // const percentt = percentRetrn/100;
+//   // const interst = capital * percentt * month;
+// // setInterest(interst);
+// setAmountInvest(amount);
+// // setPercentReturn(percentRetrn);
+// setCapitalDisply(capital)
 
 
 
-setinterestRate(parseFloat(interestRate.toFixed(2))
+// setinterestRate(parseFloat(interestRate.toFixed(2))
 
-)
-};
+// )
+// };
 
 
 // const getDate = (yr) => {
@@ -140,10 +146,10 @@ const [invstId , setInvstId] = useState("")
 const Invest = () => {
   Axios.post("http://192.168.8.103:19001/investment", {
     // percent:percent,
-    year: month,
+    // year: month,
     // startDate: startDate,
     // endDate: endDate,
-    // percentReturn: percentReturn,
+    totalReturn: totalReturn,
     interest: interestRate,
     amountToInvest:amountInvest,
     createdAt: createdAt,
@@ -177,7 +183,7 @@ const Invest = () => {
         // console.log(invstId);
         ToastAndroid.show("Sucessfully requested!",
         ToastAndroid.SHORT,ToastAndroid.BOTTOM)
-        Notfication(res.data.results.insertId)
+        // Notfication(res.data.results.insertId)
 
 
   
@@ -193,6 +199,201 @@ const Invest = () => {
     .catch((error) => console.log(error));
     
 };
+
+const handleValidation = () => {
+
+  if(!amountInvest){
+    ToastAndroid.show("Please fill in all required fields", 
+    ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+
+    return; // Don't proceed with the submission if any field is empty
+
+  }
+
+  else{
+    InvestFinal()
+
+  }
+
+}
+
+
+const InvestFinal  = () => {
+  Axios.post("http://192.168.8.103:19001/investmentFinal", {
+    totalReturn: totalReturn,
+    interest: interestRate,
+    amountToInvest:amountInvest,
+    createdAt: createdAt,
+    user:user,
+    findBussinessID: userbussID,
+    findBussinessUser: senderID,
+
+
+  })
+    .then((res) =>  
+    {
+      if(res.data.success){
+        ToastAndroid.show("please wait for the approval",
+        ToastAndroid.SHORT,ToastAndroid.BOTTOM),
+        ToastAndroid.show("investment succesfully requested!",
+        ToastAndroid.LONG,ToastAndroid.BOTTOM) 
+        NotficationsFinal()
+        // NotficationFinal(res.data.results.insertId)
+        // NotficationTypeInvest(res.data.results.insertId) //INVSTMNT ID
+  
+      }
+
+      else 
+      {
+        ToastAndroid.show("Error!",
+        ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+
+      }
+
+
+    }
+    )
+    .catch((error) => console.log(error));
+    
+};
+
+
+const NotficationFinal = (invstID) => {
+
+  Axios.post("http://192.168.8.103:19001/notifFinal", {
+    notifMsg: notifMsg,
+    // notiftype:type,
+    findBussinessUser: senderID,
+    createdAt:createdAt,
+    user:user,
+
+
+  })
+    .then((res) =>  
+
+    {
+      if(res.data.success)
+      {
+        ToastAndroid.show("Notifications.",
+        ToastAndroid.SHORT,ToastAndroid.BOTTOM),
+        NotficationTypeInvest(res.data.results.insertId,invstID ) //Notif ID
+
+  
+      }
+
+      else 
+      {
+        ToastAndroid.show("Error!",
+        ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+
+      }
+
+    }
+
+    )
+    .catch((error) => console.log(error));
+    
+};
+
+
+// the newest one
+const NotficationsFinal = () => {
+
+  Axios.post("http://192.168.8.103:19001/notificationsFinal", {
+    notifMsg: notifMsg,
+    // notiftype:type,
+    createdAt:createdAt,
+    findBussinessUser: senderID,
+    user:user,
+    bussinessID:userbussID
+
+
+  })
+    .then((res) =>  
+
+    {
+      if(res.data.success)
+      {
+        ToastAndroid.show("New Notifications.",
+        ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+
+  
+      }
+
+      else 
+      {
+        ToastAndroid.show("Error!",
+        ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+
+      }
+
+    }
+
+    )
+    .catch((error) => console.log(error));
+    
+};
+
+
+
+// const NotficationTypeInvest = (notifID,invstID) => {
+
+//   Axios.post("http://192.168.8.103:19001/NotficationTypeInvest", {
+//     notifID:notifID,
+//     invstID: invstID,
+
+//   })
+//   .then((res) =>  
+
+//   {
+//     if(res.data.success)
+//     {
+//       ToastAndroid.show("Notifications FK.",
+//       ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+
+//     }
+
+//     else 
+//     {
+//       ToastAndroid.show("Error!",
+//       ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+//       console.log(notifID,invstID)
+
+
+//     }
+
+//   }
+
+//   )
+//   .catch((error) => console.log(error));
+    
+// };
+
+
+const NotficationTypeInvest  = (notifID,invstID) => {
+  Axios.post("http://192.168.8.103:19001/NotficationTypeInvest", {
+    notifID:notifID,
+    invstID: invstID,
+    
+
+
+  })
+    .then((res) =>  
+    // {
+      ToastAndroid.show("pfk",
+      ToastAndroid.SHORT,ToastAndroid.BOTTOM),
+
+
+        
+    )
+    .catch((error) => console.log(error));
+    
+};
+
+
+
+
+
 
 const Wallet = () => {
   Axios.post("http://192.168.8.103:19001/investmentwallet", {
@@ -262,7 +463,48 @@ const handleInstallment = () => {
 }
 
 
+  //installment
+  const[installments, setInstallments] = useState([])
+  const[totalReturn,  setTotalReturn] = useState([])
 
+const handleOnBlur = (e) =>{
+  let listdate = [];
+  if (amountInvest) {
+    const loans = new Loan(amountInvest, 12, 3);
+    const loansInsallment = loans.installments;
+
+    setTotalReturn(loans.sum);
+    const startDate = new Date();
+    for (let i = 0; i < 12; i++) {
+      const nextDate = new Date(startDate);
+      nextDate.setMonth(startDate.getMonth() + i);
+
+      listdate.push(nextDate.toDateString());
+    }
+    const updateReturnsWithDate = loansInsallment.map((item, index) => ({
+      ...item,
+      date: listdate[index] || null,
+    }));
+
+    setInstallments(updateReturnsWithDate);
+    // console.log(updateReturnsWithDate);
+    //console.log(loans);
+  }
+
+}
+
+
+const [showPaypal, setShowPaypal] = useState(false)
+
+const HandlepopUp =() =>{
+  if(showPaypal){
+    setShowPaypal(false);
+  }
+  else{
+    setShowPaypal(true);
+
+  }
+}
 
 
 
@@ -299,14 +541,35 @@ const handleInstallment = () => {
               <Text style={styles.description}>Investment Description</Text>
             
             <View style={styles.actions}>
-                <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
+                <View style={styles.actionButton}>
               <Text style={styles.actionText}>Capital:</Text>
-              <Text style={styles.actionCount}>{capitalDisply}</Text>
-
-            </TouchableOpacity>
-
+              <Text style={styles.actionCount}>{capital}</Text>
 
             </View>
+
+            <View style={styles.actionButton}>
+              <Text style={styles.actionText}>Interest:</Text>
+              <Text style={styles.actionCount}>3%</Text>
+
+            </View>
+
+            </View>
+
+            <View style={styles.actions}>
+                <View style={styles.actionButton}>
+              <Text style={styles.actionText}>Total Monts:</Text>
+              <Text style={styles.actionCount}>12</Text>
+
+            </View>
+
+            <View style={styles.actionButton}>
+              <Text style={styles.actionText}>Total Return:</Text>
+              <Text style={styles.actionCount}>{totalReturn}</Text>
+
+            </View>
+
+            </View>
+
 
             {/* <View style={styles.actions}>
                 <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
@@ -324,21 +587,21 @@ const handleInstallment = () => {
             </TouchableOpacity>
             </View> */}
 
-            <View style={styles.actions}>
+            {/* <View style={styles.actions}>
                 <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
               <Text style={styles.actionText}>Amount:</Text>
               <Text style={styles.actionCount}>{amountInvest}</Text>
 
             </TouchableOpacity>
-            </View>
+            </View> */}
 
-            <View style={styles.actions}>
-                <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
+            {/* <View style={styles.actions}>
+                <View style={styles.actionButton}>
               <Text style={styles.actionText}>Interest:</Text>
-              <Text style={styles.actionCount}>{interestRate}%</Text>
+              <Text style={styles.actionCount}>3%</Text>
 
-            </TouchableOpacity>
             </View>
+            </View> */}
 
             {/* <View style={styles.actions}>
                 <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
@@ -348,7 +611,7 @@ const handleInstallment = () => {
             </TouchableOpacity>
             </View> */}
 
-            <View style={styles.actions}>
+            {/* <View style={styles.actions}>
                 <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
             <TextInput
                 style={styles.inputView}
@@ -363,7 +626,44 @@ const handleInstallment = () => {
             />
 
             </TouchableOpacity>
-            </View>
+            </View> */}
+
+            {/* <Text style={{fontSize:14,paddingRight: "59%"}}>Amount</Text> */}
+      <View style={styles.inputContainer}>
+      <TextInput
+        style={styles.input}
+        onChangeText={text => setAmountInvest(text)}
+          placeholder="Enter Amount"
+          value={amountInvest}
+          onSubmitEditing={handleOnBlur}
+
+      />
+
+    </View>
+
+
+    <View style={styles.tableContainer}>
+
+
+{/* <ScrollView horizontal={true} style={{ marginTop: 10 }}>
+ <View style={styles.table}>
+   <View style={styles.tableRow}>
+     <Text style={styles.tableHeader}>Amount</Text>
+     <Text style={styles.tableHeader}>Due Date</Text>
+   </View>
+   {installments.map((item, index) => (
+     <View key={index} style={styles.tableRow}>
+       <Text style={styles.tableCell}>{item.installment}</Text>
+       <Text style={styles.tableCell}>{item.date}</Text>
+
+     </View>
+   ))}
+ </View>
+</ScrollView> */}
+
+</View>
+
+
 
             {/* <View style={styles.actions}>
                 <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
@@ -400,7 +700,7 @@ const handleInstallment = () => {
 
             </View> */}
 
-            <View style={styles.actions}>
+            {/* <View style={styles.actions}>
                 <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
               <Text style={styles.actionCount}>{parseFloat(percent).toFixed(2)}%</Text>
 
@@ -419,7 +719,7 @@ const handleInstallment = () => {
             </TouchableOpacity>
 
 
-            </View>
+            </View> */}
 
 
 
@@ -431,7 +731,7 @@ const handleInstallment = () => {
             <TouchableOpacity
               style={[styles.button3, styles.buttonClose]}
               onPress={() => {setModalVisible(!modalVisible), 
-              Invest()
+                handleValidation()
               // Notfication()
               }}>
               <Text style={styles.textStyle}>Request</Text>
@@ -441,10 +741,25 @@ const handleInstallment = () => {
             <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
             <TouchableOpacity
               style={[styles.button3, styles.buttonClose]}
-              onPress={() => handleInstallment()}>
+              onPress={() => 
+              // handleInstallment()
+              setModalVisible(!modalVisible) 
+              }>
               <Text style={styles.textStyle}>Cancel</Text>
             </TouchableOpacity>
             </TouchableOpacity>
+            
+            </View>
+
+
+            <View style={styles.actions}>
+            
+            <TouchableOpacity onPress={() => {setShowPaypal(!showPaypal)}} style={styles.actionButton}>
+            <View
+              style={[styles.button3]}>
+              <Text style={styles.textStyle}>PayPal</Text>
+            </View>
+      </TouchableOpacity>
 
 
 
@@ -454,6 +769,9 @@ const handleInstallment = () => {
 </View>
 </View>
 
+{showPaypal ? (
+  <Paypal data={[amountInvest]} hidePopup={HandlepopUp}  />
+) : ""}
 
     </View>
   )
@@ -464,7 +782,7 @@ const styles = StyleSheet.create({
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      marginTop: 22,
+      // marginTop: 22,
       position:"absolute",
       // zIndex:1,
       // top:"50%",
@@ -477,13 +795,14 @@ const styles = StyleSheet.create({
         shadowColor: '#000',
         shadowOpacity: 0.1,
         shadowRadius: 5,
-        marginBottom:20,
+        // marginBottom:20,
         // borderBottomWidth:0.5,
         borderBottomColor:'#808080',
         padding:8,
-        width: "85%",
+        width: "82%",
         alignItems: 'center',
-        marginRight:"10%"
+        marginRight:"10%",
+        marginTop:"50%"
 
         // position:"absolute",
         // zIndex:1,
@@ -582,6 +901,55 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         alignItems: "center",
       },
+      inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 5,
+        paddingLeft: 10,
+        marginBottom: 15,
+        backgroundColor: "white",
+        borderRadius: 10,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 2,
+        elevation: 1,
+        borderWidth: 1,
+      },
+      input: {
+        // flex: 1,
+        height: 45,
+        width:"70%",
+      },
+
+      tableContainer: {
+        flexDirection: 'column',
+        alignItems: 'center',
+      },
+    
+      table: {
+        width: '100%',
+        borderWidth: .5,
+        borderColor: 'black',
+      },
+      tableRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: 'lightgray',
+      },
+      tableHeader: {
+        flex: 1,
+        padding: 8,
+        fontWeight: 'bold',
+      },
+      tableCell: {
+        flex: 1,
+        padding: 8,
+      },
+    
+    
     
 
 

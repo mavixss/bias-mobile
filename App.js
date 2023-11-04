@@ -12,8 +12,10 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 import Axios from 'axios';
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from 'react-native-toast-message';
+import {REACT_APP_NETWORK_ADD} from '@env'
 
 import Login from './Login';
 import PitchBusiness from './PitchBusiness';
@@ -23,14 +25,13 @@ import Wallet from './Wallet';
 import UploadFile from './UploadFile';
 import CreditCardInfoScreen from './CardInfo';
 import ScheduleScreen from './Timeline';
-import TwoFactorAuthView from './Authentication';
 import VerifyID from './VerifyID';
 import Investor from './Investor';
 import Request from './Request';
 import SendProfit from './SendProfit';
 import InvestorsInfo from './InvestorsInfo';
 import Feeds from './SampleFeeds';
-import InvestorFeeds from './InvestorFeeds';
+import InvestorsFeeds from './InvestorsFeeds';
 import ChatList from './ChatList';
 import Chat from './Chat';
 import Paypal from './Paypal';
@@ -38,6 +39,8 @@ import SignUpAccount from './SignUpAccount';
 import UploadBusiness from './UploadBusiness';
 import EntreprenuerFeeds from './EntreprenuerFeeds';
 import ForgotPass from './ForgotPass';
+import ProfileView from './ProfileView';
+import ProfileViewFeeds from './ProfileViewFeeds';
 const ProfileFeeds = React.lazy(() => import('./ProfileFeeds'));
 const Notif = React.lazy(() => import('./Notif'));
 const SignUp = React.lazy(() => import('./SignUp'));
@@ -47,9 +50,12 @@ const Profile = React.lazy(() => import('./Profile'));
 const Settings = React.lazy(() => import('./Settings'));
 const Return = React.lazy(() => import('./Return'));
 const Upload = React.lazy(() => import('./Upload'));
-
-
-
+import NotifPopup from './NotifPopup';
+import NotiFile from './NotiFile';
+import Authentication from './Authentication'
+import EntrepFeeds from './EntrepFeeds';
+import Search from './Search';
+import BusinessView from './BussinessView';
 const Tab = createBottomTabNavigator();
 const Top = createMaterialTopTabNavigator();
 
@@ -69,7 +75,9 @@ const findUser = async () => {
 		return;
 	  }
 	// setUser(JSON.parse(result))
-	Axios.post("http://192.168.8.103:19001/getNotifCount",{
+	// Axios.post("http://192.168.8.103:19001/getNotifCount",{
+	Axios.post(`${REACT_APP_NETWORK_ADD}:19001/getNotifCount`,{
+
 				user:result
 			})
 			  .then((res) => setNotifCount(res.data.results[0].status))		
@@ -83,7 +91,7 @@ const findUser = async () => {
 	useEffect(() => {
 		const refreshInterval = setInterval(() => {
 		  findUser();
-		}, 4000); // Refresh every 30 seconds
+		}, 3000); // Refresh every 30 seconds
 	
 		// Clean up the interval when the component unmounts
 		return () => {
@@ -121,7 +129,10 @@ const findUser = async () => {
 	
 	 
 	 <Tab.Screen name="Feeds" 
-	  component={SampleFeeds} 
+	//   component={SampleFeeds} 
+	// component={Search} 
+	component={InvestorsFeeds} 
+
 		options={{
 		headerShown: false,
 		 tabBarLabel: 'Feeds',
@@ -165,7 +176,7 @@ const findUser = async () => {
 		 tabBarIcon: ({ color, size }) => (
 			<Ionicons name="ios-wallet" color={color} size={size}/>
 		 ),
-		 tabBarBadge: 5,
+		//  tabBarBadge: 5,
 	   }}
 	 />
 
@@ -199,7 +210,9 @@ function Entreprenuer() {
 			return;
 		  }
 		// setUser(JSON.parse(result))
-		Axios.post("http://192.168.8.103:19001/getNotifCount",{
+		// Axios.post("http://192.168.8.103:19001/getNotifCount",{
+		Axios.post(`${REACT_APP_NETWORK_ADD}:19001/getNotifCount`,{
+
 					user:result
 				})
 				  .then((res) => setNotifCount(res.data.results[0].status))		
@@ -213,7 +226,7 @@ function Entreprenuer() {
 		useEffect(() => {
 			const refreshInterval = setInterval(() => {
 			  findUser();
-			}, 4000); // Refresh every 30 seconds
+			}, 3000); // Refresh every 30 seconds
 		
 			// Clean up the interval when the component unmounts
 			return () => {
@@ -251,7 +264,9 @@ function Entreprenuer() {
 		
 		 
 		 <Tab.Screen name="Feeds" 
-		  component={EntreprenuerFeeds} 
+		//   component={EntreprenuerFeeds} 
+		  component={EntrepFeeds} 
+
 			options={{
 			headerShown: false,
 			 tabBarLabel: 'Feeds',
@@ -295,7 +310,7 @@ function Entreprenuer() {
 			 tabBarIcon: ({ color, size }) => (
 				<Ionicons name="ios-wallet" color={color} size={size}/>
 			 ),
-			 tabBarBadge: 5,
+			//  tabBarBadge: 5,
 		   }}
 		 />
 	
@@ -369,8 +384,59 @@ function MyTabs() {
 		<Top.Screen name="Timeline" component={SendProfit} />
 	  </Top.Navigator>
 	);
-  }  
+  }
+  
+  
 
+  function NotifPop({ showToast, setShowToast }) {
+	const [notificationQueue, setNotificationQueue] = useState([]);
+	const [notificationId, setNotificationId] = useState(0);
+  
+	const dismissNotification = (id) => {
+	  setNotificationQueue((prevQueue) => prevQueue.filter((notif) => notif.id !== id));
+	};
+  
+	useEffect(() => {
+	  if (showToast) {
+		const newNotification = {
+		  type: 'success',
+		  text1: 'This is a success toast',
+		  text2: 'This toast was triggered from another file',
+		  visibilityTime: 2000,
+		  position: 'top',
+		  id: notificationId,
+		};
+  
+		setNotificationQueue((prevQueue) => [...prevQueue, newNotification]);
+		setNotificationId(notificationId + 1);
+  
+		setShowToast(false); // Reset the showToast state
+	  }
+	}, [showToast]);
+  
+	useEffect(() => {
+	  if (notificationQueue.length > 0) {
+		const notification = notificationQueue[0];
+  
+		Toast.show({
+		  text1: notification.text1,
+		  text2: notification.text2,
+		  position: notification.position,
+		  type: notification.type,
+		  onHide: () => {
+			dismissNotification(notification.id);
+		  },
+		});
+	  }
+	}, [notificationQueue]);
+  
+	return (
+	  <View style={{ flex: 1, justifyContent: 'center', position: "absolute", top: 0, alignItems: 'center' }}>
+		<Toast />
+	  </View>
+	);
+  }
+  
 
 
 
@@ -416,9 +482,17 @@ function App() {
 		 <Stack.Screen name="Paypal" component={Paypal} />
 		 <Stack.Screen name="SignUpAccount" component={SignUpAccount} />
 		 <Stack.Screen name="UploadBusiness" component={UploadBusiness} />
-		 <Stack.Screen name="InvestorFeeds" component={InvestorFeeds} />
+		 <Stack.Screen name="InvestorsFeeds" component={InvestorsFeeds} />
+		 <Stack.Screen name="EntrepFeeds" component={EntrepFeeds} />
 		 <Stack.Screen name="CreditCardInfoScreen" component={CreditCardInfoScreen} />
 		 <Stack.Screen name="WalletScreen" component={Wallet} />
+		 <Stack.Screen name="NotifPopup" component={NotifPopup} />
+		 <Stack.Screen name="NotiFile" component={NotiFile} />
+		 <Stack.Screen name="NotifPop" component={NotifPop} />
+		 <Stack.Screen name="Authentication" component={Authentication} />
+		 <Stack.Screen name="BusinessView" component={BusinessView} />
+		 <Stack.Screen name="ProfileView" component={ProfileView} />
+		 <Stack.Screen name="ProfileViewFeeds" component={ProfileViewFeeds} />
 		 <Stack.Screen name="Forgot Password" component={ForgotPass} />
 		 <Stack.Screen name="Entreprenuer" 
 		 options={{ headerShown: false }}
@@ -429,5 +503,6 @@ function App() {
 }
 
 export default App;
+
 
 

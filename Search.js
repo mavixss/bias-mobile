@@ -16,67 +16,46 @@ import {
   RefreshControl,
 	props,
   Pressable,
-  ScrollView,
-  Dimensions,
-  Animated, 
-  Easing   } from "react-native";
+  Dimensions
+  } from "react-native";
   import { AntDesign, Ionicons   } from '@expo/vector-icons';
   import Axios from 'axios';
   import AsyncStorage from "@react-native-async-storage/async-storage";
-
   import { useRoute } from '@react-navigation/native';
-
-  import React, { useEffect, useState, useRef } from "react";
+  import React, { useEffect, useState } from "react";
   import { useNavigation } from "@react-navigation/native";
-  
   import { StatusBar } from "expo-status-bar";
   import Upload from "./Upload";
-import { Modal } from "react-native-paper";
-import Invest from "./Invest";
-import LoadingScreen from "./LoadingScreen";
-const {width, height} = Dimensions.get('window');
+  import { Modal } from "react-native-paper";
+  import Invest from "./Invest";
+  import LoadingScreen from "./LoadingScreen";
+  import { CommonActions } from '@react-navigation/native';
+  import {NETWORK_ADD} from '@env';
+
 
   
-  const EntreprenuerFeeds = () => {
-    const route = useRoute();
+const Search = () => {
+const route = useRoute();
+const networkAdd = NETWORK_ADD;
+console.log(networkAdd)
 
 const [modalVisible, setModalVisible] = useState(false);
-
 const [visible, setVisible] = useState(false);
-
 const [capital, setCapital] = useState();
 const [receiverID, setreceiverID] = useState();
 const [bussID, setbussID] = useState();
-
 const [addrss, setAddrss] = useState();
 const [date, setDate] = useState();
-
 const navigation = useNavigation();
-const [image, setImage] = useState(null);
-const [imageFilename, setImageFilename] = useState("");
-const [imageURL, setimageURL] = useState("");
-
-const [imagedataURL, setimagedataURL] = useState([]);
 const [newsfeedsData, setnewsfeedsData] = useState([]);
-
-
 const [buttonStatus, setbuttonStatus] = useState(true);
 const [useSearch, setSearch] = useState("");
-
-
-// const [findBussinessUser, setfindBussinessUser] = useState(0);
-// const [findBussinessID, setfindBussinessID] = useState(0);
 
 
 //for loading screen
 const [isLoading, setIsLoading] = useState(true);
 
 //////////////// created
-
-const handleSubmit = async (id) => {
-  // const getData = { id:name};
-  await AsyncStorage.setItem('bussID', JSON.stringify(id));
-}
  
 var datee = new Date().getDate();
 var month = new Date().getMonth() + 1;
@@ -110,6 +89,14 @@ const formatDate = (date) => {
   // Customize the format as needed
 };
 
+useEffect(() => {
+  // Axios.get("http://192.168.254.127:19001/getInvestorsFeedsFinal")
+    Axios.get(`${networkAdd}:19001/getInvestorsFeedsFinal`)
+    .then((res) => {setnewsfeedsData(res.data.result)
+    // console.log(result.data[0].buss_user_id);
+    }) 
+  .catch((error) => console.log(error))
+  },[]);
 
 
 useEffect(() => {
@@ -119,30 +106,30 @@ useEffect(() => {
   }, 2000); // Simulate a 2-second loading time
 }, []);
 
-useEffect(() => {
-Axios.get("http://192.168.8.103:19001/getBusiness")
-.then((result) => setimagedataURL(result.data)) 
-.catch((error) => console.log(error))
-},[imagedataURL]);
 
-useEffect(() => {
-  Axios.get("http://192.168.8.103:19001/getFeedsDisplay")
-    // Axios.get(`${process.env.REACT_APP_NETWORK_ADD}:19001/getFeedsDisplay`)
-    .then((result) => {setnewsfeedsData(result.data)
-    // console.log(result.data[0].buss_user_id);
-    }) 
-  .catch((error) => console.log(error))
-  },[newsfeedsData]);
-  
+
+  const [results, setResults] = useState([]);
+
+
+  const handleSearch = async () => {
+    try {
+      const response = await Axios.get(
+        // `http://192.168.8.103:19001/search?useSearch=${useSearch}`
+        `${NETWORK_ADD}:19001/search?useSearch=${useSearch}`
+
+      );
+      setResults(response.data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
 
 
   const[user, setUser] = useState('');
   const[dataID, setData] = useState([]);
   const msg = "Requested to invest to your business";
-const notifMsg = dataID + msg;
-    // console.log(dataID);
-
+  const notifMsg = dataID + msg;
 
   useEffect(() => {
   async function fecthUser(){
@@ -150,7 +137,9 @@ const notifMsg = dataID + msg;
     // console.log(id);
     setUser(id)
 
-    Axios.post("http://192.168.8.103:19001/testID",{
+    // Axios.post("http://192.168.8.103:19001/getIdFinal",{
+      Axios.post(`${NETWORK_ADD}:19001/getIdFinal`,{
+
         user:id
       })
         // .then((res) => setData(res.data.results[0]))
@@ -164,10 +153,7 @@ const notifMsg = dataID + msg;
       navigation.navigate("Login")
 
     }
-
-    
    }
-
 
    fecthUser();
   },[])
@@ -176,7 +162,9 @@ const notifMsg = dataID + msg;
 
   const Notfication = (findBussinessUser, findBussinessID) => {
     
-    Axios.post("http://192.168.8.103:19001/notif", {
+    // Axios.post("http://192.168.8.103:19001/notif", {
+      Axios.post(`${NETWORK_ADD}:19001/notif`, {
+
       notifMsg: notifMsg,
       user:user,
       createdAt:createdAt,
@@ -186,38 +174,12 @@ const notifMsg = dataID + msg;
 
     })
       .then((res) =>  
-      // {
-
-        Test(),
         ToastAndroid.show("Investment sucessfully requested.",
         ToastAndroid.SHORT,ToastAndroid.BOTTOM),
       )
       .catch((error) => console.log(error));
       
   };
-
-
-  // const HandlepopUp =(capital) =>{
-
-  //   console.log(capital);
-  //   if(visible){
-  //     setVisible(false);
-  //     setCapital("");
-
-  //   }
-  //   else{
-  //     setVisible(true);
-  //     setCapital(capital);
-
-  //   }
-  // }
-
-
-
-
-
-
-
 
 
   const HandlepopUp =() =>{
@@ -239,32 +201,6 @@ const notifMsg = dataID + msg;
   }
 
 
-  const Test = () => {
-    Axios.post("http://192.168.8.103:19001/testbussID", {
-      // Axios.post(`${process.env.REACT_APP_NETWORK_ADD}:19001/testLogin`, {
-      //  user: user,
-    })
-    
-    .then((res) =>  
-    {
-      // console.log(findBussinessUser),
-
-      //  console.log(res.data.results[0].buss_address)
-
-      if(res.data.success)
-      {
-        handleSubmit(res.data.results[0].buss_id)
-        // ToastAndroid.show("Welcome user!",
-        // ToastAndroid.SHORT,ToastAndroid.BOTTOM),
-        // navigation.navigate("Home")
-        // // navigation.navigate("Profile")
-  
-  
-      }
-    })
-    .catch((error) => console.log(error));
-    
-};
 
 
 
@@ -292,76 +228,13 @@ const handleRefresh = () => {
 };
 
 
-const [activeIndex, setActiveIndex] = useState(0);
-const scrollViewRef = useRef(null);
-
-const scrollX = new Animated.Value(0);
-
-const onScroll = Animated.event(
-  [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-  { useNativeDriver: false }
-);
-
-const handleItemPress = (index) => {
-  if (scrollViewRef.current) {
-    scrollViewRef.current.scrollTo({ x: index * Dimensions.get('window').width });
-  }
-};
-
-useEffect(() => {
-  const autoSwipeInterval = setInterval(() => {
-    const nextIndex = (activeIndex + 1) % newsfeedsData.length;
-    handleItemPress(nextIndex);
-    setActiveIndex(nextIndex);
-  }, 3000); // Change the interval duration as needed
-
-  return () => {
-    clearInterval(autoSwipeInterval);
-  };
-}, [activeIndex]);
-
-
-const[profileDisplay, setProfileDisplay] = useState([]);
-const[profID,setProfID] = useState([]);
-
-
-useEffect(() => {
-  Axios.post("http://192.168.8.103:19001/testID",{
-    user:profID
-  })
-    // .then((res) => setData(res.data.results[0]))
-    .then((res) => setProfileDisplay(res.data.results)
-    )
-
-    //  .then((data) => setData(data)
-    .catch((error) => console.log(error));
-
-}, [profileDisplay]);
-
-
-const findUser = async () => {
-  const result = await AsyncStorage.getItem('userID');
-    console.log(result);
-    if(!result){
-      navigation.navigate("Login")
-
-    }
-    setProfID(JSON.parse(result))
-  };
-
-  useEffect(() => {
-    findUser();
-  },[])
-
-
+  // Get the screen dimensions
   const { width, height } = Dimensions.get('window');
 
   // Calculate button size and text size based on screen dimensions
-  const buttonWidth = width * 0.30;
+  const buttonWidth = width * 0.34;
   const buttonHeight = height * 0.05;
   const textSize = Math.min(width, height) * 0.036;
-
-
 
 	return (
 	  <SafeAreaView style={{ flex: 1, height: "100%", marginTop:"5%" }}>
@@ -378,7 +251,7 @@ const findUser = async () => {
 
   <View style={{flexDirection:'row'}}>
 
-  <TouchableOpacity style={{marginTop:"3%"}}
+  {/* <TouchableOpacity style={{marginTop:"3%"}}
         onPress={() => navigation.navigate('Profile')}
         >
       <Image
@@ -386,15 +259,19 @@ const findUser = async () => {
           source={require("./assets/profilee.png")}              
           />
     </TouchableOpacity>
-
+ */}
       <View style={styles.searchContainer}>
       <TextInput
           style={styles.searchInput}
           onChangeText={text => setSearch(text)}
           placeholder="Search post.."
           value={useSearch}
+          onSubmitEditing={handleSearch}
+
         />
       </View>
+
+      <Button style={{marginTop:"3%"}} title="Search" onPress={handleSearch} />
 
 </View>
 
@@ -415,79 +292,19 @@ const findUser = async () => {
 				</Text>
 			</View>}
 
-      ListHeaderComponent={
-  <View style={styles.topContainer}>
-
-        {/* <TouchableOpacity style={styles.button}  
-       onPress={() => navigation.navigate('UploadBusiness')}
-        >
-        <Text style={{ color:'#ffffff' }}>Pitch Business</Text> 
-      </TouchableOpacity>  */}
-
-      {profileDisplay.map((item, index) => (
-      <TouchableOpacity key={index} style={styles.pitch}>
-
-      <View style={styles.headerpitch}>
-      <Image
-       style={styles.avatar}
-       source={require("./assets/profilee.png")}
-      />
-    <View style={{marginRight:"14%"}}>
-      <Text style={styles.name}> {item.user_fname}{item.user_lname}</Text>
+  //     ListHeaderComponent={
+  // <View style={styles.searchContainer}>
+  //       <TouchableOpacity style={styles.button}  
+  //      onPress={() => navigation.navigate('Upload')}
+  //       >
+  //       <Text style={{ color:'#ffffff' }}>Pitch Business</Text> 
+  //     </TouchableOpacity> 
       
-    </View>
-    <Pressable onPress={() => {}} style={styles.actionButton}>
-            <TouchableOpacity
-            onPress={() => navigation.navigate('UploadBusiness')}
-             style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}>
-                <Text style={[styles.textStyle , { fontSize: textSize }]}>Pitch</Text>
-           </TouchableOpacity>
-            </Pressable>
+  //       </View> 
 
-    </View>
+  //     }
 
-      </TouchableOpacity>
-      ))}
-
-
-
-
-
-
-
-      <View style={styles.carouselContainer}>
-    <ScrollView
-        ref={scrollViewRef}
-        horizontal={true}
-        pagingEnabled={true}
-        showsHorizontalScrollIndicator={false}
-        scrollEventThrottle={16}
-        onMomentumScrollEnd={(event) => {
-          const xOffset = event.nativeEvent.contentOffset.x;
-          const index = Math.round(xOffset / Dimensions.get('window').width);
-          setActiveIndex(index);
-        }}
-        {...onScroll}
-      >
-       {newsfeedsData.map((item, index) => (
-          <View key={index} style={styles.itemContainer}>
-            <Image source={{uri: item.buss_photo}} style={styles.image} />
-            <View style={styles.textContainer}>
-              <Text style={styles.title}>{item.buss_name}</Text>
-              <Text style={styles.content}>{item.user_fname} {item.user_lname}</Text>
-            </View>
-          </View>
-        ))}
-    </ScrollView>
-  </View>
-
-
-      
-        </View> 
-
-      }
-
-		  data={newsfeedsData}
+		  data={results.length > 0 ? results : newsfeedsData}
 		  keyExtractor={(item, index) => index.toString()}
       //for drag to refresh
       refreshControl={
@@ -498,20 +315,27 @@ const findUser = async () => {
       }
 		  renderItem={({ item }) => (
 			<TouchableOpacity style={styles.post}
-            
-				// 	onPress={() =>
-				// navigation.navigate("SampleFeeds", {
-				//   capitalData: item.buss_capital,
-				// })
-			  // }	
-			  
-			  >
+      //to view business
+      onPress={() => {
+          navigation.navigate('BusinessView', { id: item.buss_id });
+        }}
+
+      >
 
               <View style={styles.header}>
+              <TouchableOpacity
+      //to view profile
+      onPress={() => {
+          // navigation.navigate('ProfileView', { id: item.user_id });
+          navigation.navigate('ProfileViewFeeds', { id: item.user_id });
+        }}
+              
+              >
                 <Image
                   style={styles.avatar}
-                  source={require("./assets/profilee.png")}
+                  source={item.user_profile ? { uri: item.user_profile } : require("./assets/prrofilee.png")} 
                 />
+                </TouchableOpacity>
                 <View>
             <Text style={styles.name}> {item.user_id} {item.user_fname} {item.user_lname}
 			{/* {item.name} */}
@@ -520,9 +344,20 @@ const findUser = async () => {
               <Text style={styles.date}>{item.buss_address}</Text>
 
               </View>
+
+              <View style={styles.ribbon}>
+              <View style={styles.textContainer}>
+               <Text style={styles.ribbonText}>5%</Text>
+            </View>
+           </View>
+
               </View>
-              
-              <Text style={styles.description}> {item.buss_id} {item.buss_details}</Text>
+
+
+              <Text style={styles.description}> Business Name: {item.buss_name} {item.buss_type_name}</Text>
+              <Text style={styles.description}> {item.buss_summary}</Text>
+              <Text style={styles.description}> {item.buss_target_audience	}</Text>
+
               <Image style={{ height: 320, width: '100%' }}  source={{uri: item.buss_photo}} />
             
             <View style={styles.actions}>
@@ -543,15 +378,40 @@ const findUser = async () => {
             </TouchableOpacity>
             <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
               <Text style={styles.actionText}>Remains:</Text>
-              {/* {item.totalAmountInvts ? (   <Text style={styles.actionCount}>{(item.buss_capital)-(item.totalAmountInvts)}</Text>) : ""} */}
               <Text style={styles.actionCount}>{(item.buss_capital)-(item.totalAmountInvts)}</Text>            
               </TouchableOpacity>
             </View>
 
+            <View style={styles.actions}>
+            <Pressable onPress={() => {}} style={styles.actionButton}>
+            <TouchableOpacity
+             style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
+            //  onPress={() => setModalVisible(true)}
+            onPress={() =>
+        {
+          //pass data to invest file
+          setCapital(item.buss_capital),
+          setbussID(item.buss_id),
+          setreceiverID(item.user_id),
+          HandlepopUp()
+        }
+			  }
+        >
+            <Text style={[styles.textStyle, { fontSize: textSize }]}>Navigate Invest</Text>
+           </TouchableOpacity>
+            </Pressable>
+
+            <Pressable onPress={() => {}} style={styles.actionButton}>
+            <TouchableOpacity
+             style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
+             onPress={() => {Notfication(item.user_id, item.buss_id)}}
+            >
+                <Text style={[styles.textStyle, { fontSize: textSize }]}>Notification Test</Text>
+           </TouchableOpacity>
+            </Pressable>
 
 
-
-
+            </View>
 
 
 
@@ -572,7 +432,7 @@ const findUser = async () => {
 
 
 
-	  </SafeAreaView>
+</SafeAreaView>
 	);
   };
   
@@ -647,26 +507,9 @@ const findUser = async () => {
         borderBottomColor:'#808080',
         padding:12,
         backgroundColor: 'white',
-        marginTop:-80,
 
         
       },
-
-      pitch: {
-        marginHorizontal:10,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        marginBottom:15,
-        borderBottomWidth:0.5,
-        borderBottomColor:'#808080',
-        padding:12,
-        backgroundColor: 'white',
-        marginTop: 5,
-
-        
-      },
-
       avatar: {
         width: 50,
         height: 50,
@@ -684,12 +527,6 @@ const findUser = async () => {
         alignItems: 'center',
         marginBottom: 10,
       },
-      headerpitch: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
-      },
-
       name: {
         fontSize: 16,
         fontWeight: 'bold',
@@ -701,7 +538,7 @@ const findUser = async () => {
         marginLeft: 10,
       },
       description: {
-        marginBottom: 10,
+        marginBottom: 4,
       },
       actions: {
         flexDirection: 'row',
@@ -724,25 +561,11 @@ const findUser = async () => {
       },
 
       searchContainer: {
-        width:'70%',
+        width:'85%',
         padding: "2%",
-        paddingTop:"2%",
-        
-        // marginBottom:"-100%"
-
+        paddingTop:"2%"
 
       },
-
-      topContainer: {
-        width:'100%',
-        padding: "2%",
-        paddingTop:"2%",
-        
-        // marginBottom:"-100%"
-
-
-      },
-
       searchInput: {
         height:50,
         marginTop:"2%",
@@ -811,11 +634,11 @@ const findUser = async () => {
       },
 
       button3: {
-        borderRadius: 8,
+        borderRadius: 14,
         padding: 10,
         elevation: 2,
         height:"100%",
-        width:"60%",
+        // width:"60%",
       },
       buttonOpen: {
         backgroundColor: '#F194FF',
@@ -833,124 +656,29 @@ const findUser = async () => {
         textAlign: 'center',
       },
 
-
-
-      ///carousell
-
-      cardContainer: {
-        marginHorizontal:10,
-        width: "20%",
-        height: "32%",
-        backgroundColor: 'white',
-        borderRadius: 10,
-        padding: 20,
-        justifyContent: 'space-between',
-        shadowColor: '#000',
-        shadowOffset: {
-          width: 0,
-          height: 6,
-        },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-        elevation: 10,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderBottomWidth: 6,
-        borderBottomColor: '#ccc',
-      },
-      cardNumber: {
-        fontSize: 18,
-        letterSpacing: 4,
-        marginBottom: 10,
-      },
-      cardInfoContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-      },
-      cardInfoItem: {
-        flex: 1,
-      },
-      cardInfoLabel: {
-        fontSize: 12,
-        color: 'gray',
-      },
-      cardInfoValue: {
-        fontSize: 14,
-        fontWeight: 'bold',
-      },
-      // carouselContainer: {
-      //   // marginVertical: 40,
-      //   // alignItems: 'center',
-      //   //  marginBottom:"-100%"
-        
-
-      // },
-      logo: {
-        width: "100%",
-        height: "40%",
-      },
-    
-
-      //
-
-      carouselContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        height:400,
-        backgroundColor: 'white',
-
-      },
-      itemContainer: {
-        marginTop:"-3%",
-        // marginBottom:"-20%",
-        width: width - 80,
-        height: height / 2,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginHorizontal: 31,
-          },
-      image: {
-        width: '100%',
-        height: '60%',
-        resizeMode: 'cover',
-        borderRadius: 10,
+      ribbon: {
+        position: 'absolute',
+        top: -10,
+        right: 10,
+        backgroundColor: 'transparent',
+        borderBottomRightRadius: 25,
+        borderBottomLeftRadius: 25,
+        borderLeftWidth: 25,
+        borderRightWidth: 25,
+        borderStyle: 'solid',
+        borderBottomWidth: 50,
+        borderColor: 'purple',
       },
       textContainer: {
-        width: '90%',
-        padding: 10,
-        backgroundColor: 'rgba(255, 255, 255, 0.6)',
-        borderRadius: 10,
         position: 'absolute',
-        bottom: 100,
-        alignItems: 'center',
+        top: 20,
+        right: -8,
       },
-      title: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 5,
-      },
-      content: {
-        fontSize: 14,
-        textAlign: 'center',
-      },
-      dotContainer: {
-        width: '100%',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'absolute',
-        // bottom: -3,
-      },
-      dot: {
-        width: 7,
-        height: 7,
-        borderRadius: 10,
-        margin: 5,
-        borderWidth:1
-      },
-    
+      ribbonText: {
+        color: 'white',
+        fontSize: 16,
+      },    
 });
   
-  export default EntreprenuerFeeds;
+  export default Search;
   

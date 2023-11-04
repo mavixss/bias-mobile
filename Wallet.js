@@ -27,7 +27,7 @@ export default function Wallet() {
   // console.log(test);
   
 
-  const[dataID, setData] = useState(0);
+  const[dataID, setData] = useState("Processing...");
   // const item = dataID[0];
 
     // useEffect(() => {

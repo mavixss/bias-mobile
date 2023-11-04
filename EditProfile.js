@@ -785,6 +785,21 @@
 
 // });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////
+
 import Axios from "axios";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState, useRef } from "react";
@@ -979,63 +994,145 @@ useEffect(() => {
       .catch((error) => console.log(error));
   }, []);
 
-  
+  const [userage, setUserAge ] = useState("")
+  const calculateAge = (birthdate) => {
+    const birthDate = new Date(birthdate);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
 
-  const Update = () => {
-    Axios.post("http://192.168.8.103:19001/updateProfilee", {
-      user:useer,
-      userType: selecteduserType,
-      firstName: firstName,
-      lastName: lastName,
-      middleName: middleName,
-      imageURL:imageURL,
-      bDate: dateformat,
-      gender: selectedgender,
-      contactNum: contactNum,
-      email: email,
-      pass: pass,
-      selectedProvince: selectedProvince,
-      selectedCity: selectedCity,
-      selectedBrgy: selectedBrgy,
-      createdAt: getCurrentDate,
+    // Check if the birthday has occurred this year
+    if (
+      today.getMonth() < birthDate.getMonth() ||
+      (today.getMonth() === birthDate.getMonth() &&
+        today.getDate() < birthDate.getDate())
+    ) {
+      return age - 1;
+    }
 
-    })
-      .then((res) =>  
-      {
-        // console.log(res.data)
-
-        if(res.data.success)
-        {
-          handleSubmit(),
-          ToastAndroid.show("account succesfully updated!",
-          ToastAndroid.SHORT,ToastAndroid.BOTTOM),
-          navigation.navigate("Home")
-
-        }
-        else 
-        {
-
-      switch(res.data.errorNum) {
-        //to test if the email already exist
-      case 1062:
-        ToastAndroid.show(
-          "email already exist!",
-          ToastAndroid.SHORT,ToastAndroid.BOTTOM)
-        // console.log(res.data.errorNum)
-        break;
-        }
-        // console.log(res.data.errorNum)
-
-          
-        }
-      }
-      )
-      .catch((error) => console.log(error));
-      
+    return age;
+  };
+  const handleSetAge = (birthdate) => {
+    setUserAge(calculateAge(birthdate));
   };
 
 
+
+  
+
+  // const Update = () => {
+  //   Axios.post("http://192.168.8.103:19001/updateProfilee", {
+  //     user:useer,
+  //     userType: selecteduserType,
+  //     firstName: firstName,
+  //     lastName: lastName,
+  //     middleName: middleName,
+  //     bDate: bday,
+  //     gender: selectedgender,
+  //     userage:userage,
+  //     contactNum: contactNum,
+  //     email: email,
+  //     pass: pass,
+  //     selectedProvince: selectedProvince,
+  //     selectedCity: selectedCity,
+  //     selectedBrgy: selectedBrgy,
+  //     imageURL:imageURL,
+  //     createdAt: getCurrentDate,
+
+  //   })
+  //     .then((res) =>  
+  //     {
+  //       // console.log(res.data)
+
+  //       if(res.data.success)
+  //       {
+  //         handleSubmit(),
+  //         ToastAndroid.show("account succesfully updated!",
+  //         ToastAndroid.SHORT,ToastAndroid.BOTTOM),
+  //         navigation.navigate("Home")
+
+  //       }
+  //       else 
+  //       {
+
+  //     switch(res.data.errorNum) {
+  //       //to test if the email already exist
+  //     case 1062:
+  //       ToastAndroid.show(
+  //         "email already exist!",
+  //         ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+  //       // console.log(res.data.errorNum)
+  //       break;
+  //       }
+  //       // console.log(res.data.errorNum)
+
+          
+  //       }
+  //     }
+  //     )
+  //     .catch((error) => console.log(error));
+      
+  // };
+
+
     // Function to handle password confirmation
+    
+    
+    const Update = () => {
+      Axios.post("http://192.168.8.103:19001/updateProfileFinal", {
+        user:useer,
+        userType: selecteduserType,
+        firstName: firstName,
+        lastName: lastName,
+        middleName: middleName,
+        bDate: bday,
+        gender: selectedgender,
+        userage:userage,
+        contactNum: contactNum,
+        email: email,
+        pass: pass,
+        selectedProvince: selectedProvince,
+        selectedCity: selectedCity,
+        selectedBrgy: selectedBrgy,
+        imageURL:imageURL,
+        createdAt: getCurrentDate,
+  
+      })
+        .then((res) =>  
+        {
+          // console.log(res.data)
+  
+          if(res.data.success)
+          {
+            handleSubmit(),
+            ToastAndroid.show("account succesfully updated!",
+            ToastAndroid.SHORT,ToastAndroid.BOTTOM),
+            navigation.navigate("Home")
+  
+          }
+          else 
+          {
+  
+        switch(res.data.errorNum) {
+          //to test if the email already exist
+        case 1062:
+          ToastAndroid.show(
+            "email already exist!",
+            ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+          // console.log(res.data.errorNum)
+          break;
+          }
+          // console.log(res.data.errorNum)
+  
+            
+          }
+        }
+        )
+        .catch((error) => console.log(error));
+        
+    };
+  
+    
+    
     const handleConfirmPassword = () => {
       if (pass === confirmPassword) {
         // Passwords match, you can proceed with your logic here.
@@ -1207,7 +1304,7 @@ const imagesUpload = async () => {
 
      {image && <Image source={{ uri: image }} style={styles.image2} />}
 </View>
-  <Text style={{fontSize:20, paddingBottom:"2%", fontWeight:"500"}}>{item.user_fname}{item.user_lname}</Text>
+  <Text style={{fontSize:20, paddingBottom:"2%", fontWeight:"500"}}>{item.user_fname + ' ' + item.user_lname}</Text>
 
 
 <Button disabled={buttonStatus} title="Save" onPress={ () => imagesUpload()} />
@@ -1288,7 +1385,7 @@ const imagesUpload = async () => {
          <TextInput
            style={styles.inputbday}
            editable= {false}
-        value={dateformat}
+        value={bday ? new Date(bday).toLocaleDateString() : "Birthdate"}
 
          />
    

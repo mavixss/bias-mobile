@@ -16,52 +16,37 @@ import {
   RefreshControl,
 	props,
   Pressable,
+  Dimensions
   } from "react-native";
   import { AntDesign, Ionicons   } from '@expo/vector-icons';
   import Axios from 'axios';
   import AsyncStorage from "@react-native-async-storage/async-storage";
-
   import { useRoute } from '@react-navigation/native';
-
   import React, { useEffect, useState } from "react";
   import { useNavigation } from "@react-navigation/native";
-  
   import { StatusBar } from "expo-status-bar";
   import Upload from "./Upload";
-import { Modal } from "react-native-paper";
-import Invest from "./Invest";
-import LoadingScreen from "./LoadingScreen";
+  import { Modal } from "react-native-paper";
+  import Invest from "./Invest";
+  import LoadingScreen from "./LoadingScreen";
 
   
-  const InvestorFeeds = () => {
-    const route = useRoute();
+const BusinessView = () => {
 
+const route = useRoute();
+const id = route.params.id; //from feeds
 const [modalVisible, setModalVisible] = useState(false);
-
 const [visible, setVisible] = useState(false);
-
 const [capital, setCapital] = useState();
 const [receiverID, setreceiverID] = useState();
 const [bussID, setbussID] = useState();
-
 const [addrss, setAddrss] = useState();
 const [date, setDate] = useState();
-
 const navigation = useNavigation();
-const [image, setImage] = useState(null);
-const [imageFilename, setImageFilename] = useState("");
-const [imageURL, setimageURL] = useState("");
-
-const [imagedataURL, setimagedataURL] = useState([]);
 const [newsfeedsData, setnewsfeedsData] = useState([]);
-
-
+const [viewBusiness, setViewBusiness] = useState([]);
 const [buttonStatus, setbuttonStatus] = useState(true);
 const [useSearch, setSearch] = useState("");
-
-
-// const [findBussinessUser, setfindBussinessUser] = useState(0);
-// const [findBussinessID, setfindBussinessID] = useState(0);
 
 
 //for loading screen
@@ -69,10 +54,7 @@ const [isLoading, setIsLoading] = useState(true);
 
 //////////////// created
 
-const handleSubmit = async (id) => {
-  // const getData = { id:name};
-  await AsyncStorage.setItem('bussID', JSON.stringify(id));
-}
+
  
 var datee = new Date().getDate();
 var month = new Date().getMonth() + 1;
@@ -115,20 +97,17 @@ useEffect(() => {
   }, 2000); // Simulate a 2-second loading time
 }, []);
 
-useEffect(() => {
-Axios.get("http://192.168.8.103:19001/getBusiness")
-.then((result) => setimagedataURL(result.data)) 
-.catch((error) => console.log(error))
-},[imagedataURL]);
 
 useEffect(() => {
-  Axios.get("http://192.168.8.103:19001/getFeedsDisplay")
+  Axios.get("http://192.168.8.103:19001/ViewBussiness")
     // Axios.get(`${process.env.REACT_APP_NETWORK_ADD}:19001/getFeedsDisplay`)
     .then((result) => {setnewsfeedsData(result.data)
     // console.log(result.data[0].buss_user_id);
     }) 
   .catch((error) => console.log(error))
   },[newsfeedsData]);
+
+
   
 
 
@@ -136,50 +115,15 @@ useEffect(() => {
   const[user, setUser] = useState('');
   const[dataID, setData] = useState([]);
   const msg = "Requested to invest to your business";
-const notifMsg = dataID + msg;
-    // console.log(dataID);
-
-    // useEffect(() => {
-    //   Axios.post("http://192.168.8.103:19001/testID",{
-    //     user:user
-    //   })
-    //     // .then((res) => setData(res.data.results[0]))
-    //     .then((res) => setData(res.data.results[0].user_fname)
-    //     )
-
-    //     //  .then((data) => setData(data)
-    //     .catch((error) => console.log(error));
-
-    // }, [dataID]);
-  
-
-  // const findUser = async () => {
-  // const id = await AsyncStorage.getItem('userID');
-  //   console.log(result);
-
-  //   Axios.post("http://192.168.8.103:19001/testID",{
-  //       user:id
-  //     })
-  //       // .then((res) => setData(res.data.results[0]))
-  //       .then((res) => setData(res.data.results[0].user_fname)
-  //       )
-
-  //       //  .then((data) => setData(data)
-  //       .catch((error) => console.log(error));
-  //   if(!result){
-  //     navigation.navigate("Login")
-
-  //   }
-  // // setUser(JSON.parse(result))
-  // };
+  const notifMsg = dataID + msg;
 
   useEffect(() => {
   async function fecthUser(){
     const id = await AsyncStorage.getItem('userID');
-    console.log(id);
+    // console.log(id);
     setUser(id)
 
-    Axios.post("http://192.168.8.103:19001/testID",{
+    Axios.post("http://192.168.8.103:19001/getIdFinal",{
         user:id
       })
         // .then((res) => setData(res.data.results[0]))
@@ -193,10 +137,7 @@ const notifMsg = dataID + msg;
       navigation.navigate("Login")
 
     }
-
-    
    }
-
 
    fecthUser();
   },[])
@@ -215,8 +156,6 @@ const notifMsg = dataID + msg;
 
     })
       .then((res) =>  
-      // {
-
         Test(),
         ToastAndroid.show("Investment sucessfully requested.",
         ToastAndroid.SHORT,ToastAndroid.BOTTOM),
@@ -224,29 +163,6 @@ const notifMsg = dataID + msg;
       .catch((error) => console.log(error));
       
   };
-
-
-  // const HandlepopUp =(capital) =>{
-
-  //   console.log(capital);
-  //   if(visible){
-  //     setVisible(false);
-  //     setCapital("");
-
-  //   }
-  //   else{
-  //     setVisible(true);
-  //     setCapital(capital);
-
-  //   }
-  // }
-
-
-
-
-
-
-
 
 
   const HandlepopUp =() =>{
@@ -268,32 +184,6 @@ const notifMsg = dataID + msg;
   }
 
 
-  const Test = () => {
-    Axios.post("http://192.168.8.103:19001/testbussID", {
-      // Axios.post(`${process.env.REACT_APP_NETWORK_ADD}:19001/testLogin`, {
-      //  user: user,
-    })
-    
-    .then((res) =>  
-    {
-      // console.log(findBussinessUser),
-
-      //  console.log(res.data.results[0].buss_address)
-
-      if(res.data.success)
-      {
-        handleSubmit(res.data.results[0].buss_id)
-        // ToastAndroid.show("Welcome user!",
-        // ToastAndroid.SHORT,ToastAndroid.BOTTOM),
-        // navigation.navigate("Home")
-        // // navigation.navigate("Profile")
-  
-  
-      }
-    })
-    .catch((error) => console.log(error));
-    
-};
 
 
 
@@ -319,91 +209,52 @@ const handleRefresh = () => {
   setRefreshing(true);
   fetchData();
 };
+
+
+  // Get the screen dimensions
+  const { width, height } = Dimensions.get('window');
+
+  // Calculate button size and text size based on screen dimensions
+  const buttonWidth = width * 0.34;
+  const buttonHeight = height * 0.05;
+  const textSize = Math.min(width, height) * 0.036;
+
+
+
+  useEffect(() => {
+    Axios.post("http://192.168.8.103:19001/ViewBussiness",{
+      bussID:id
+    })
+      // .then((res) => setData(res.data.results[0]))
+      .then((res) => setViewBusiness(res.data.results)
+      )
   
+      //  .then((data) => setData(data)
+      .catch((error) => console.log(error));
+  
+  }, [viewBusiness]);
+
+
+
+
+
+
+
+
+
+
 	return (
 	  <SafeAreaView style={{ flex: 1, height: "100%", marginTop:"5%" }}>
-
-        {/* <View style={styles.searchContainer}>
-        <TouchableOpacity style={styles.button}  
-       onPress={() => navigation.navigate('Upload')}
-        >
-        <Text style={{ color:'#ffffff' }}>Pitch Business</Text> 
-      </TouchableOpacity> 
-      
-        </View> */}
-
-
-  <View style={{flexDirection:'row'}}>
-
-  <TouchableOpacity style={{marginTop:"3%"}}
-        onPress={() => navigation.navigate('Profile')}
-        >
-      <Image
-          style={styles.profile}
-          source={require("./assets/profilee.png")}              
-          />
-    </TouchableOpacity>
-
-      <View style={styles.searchContainer}>
-      <TextInput
-          style={styles.searchInput}
-          onChangeText={text => setSearch(text)}
-          placeholder="Search post.."
-          value={useSearch}
-        />
-      </View>
-
-</View>
-
 
 {isLoading ? (
 
 <LoadingScreen />
 ):(
 
-//height for flatlist
   <View style={{maxHeight:"86%"}}>
+  {viewBusiness.map((item, index) => (
 
-		<FlatList
-		 ListEmptyComponent={
-			<View >
-				<Text style={styles.emptyListStyle}>
-					NO DATA FOUND
-				</Text>
-			</View>}
-
-      ListHeaderComponent={
-  <View style={styles.searchContainer}>
-
-        <TouchableOpacity style={styles.button}  
-       onPress={() => navigation.navigate('UploadBusiness')}
-        >
-        <Text style={{ color:'#ffffff' }}>Pitch Business</Text> 
-      </TouchableOpacity> 
-      
-        </View> 
-
-      }
-
-		  data={newsfeedsData}
-		  keyExtractor={(item, index) => index.toString()}
-      //for drag to refresh
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-        />
-      }
-		  renderItem={({ item }) => (
-			<TouchableOpacity style={styles.post}
-            
-				// 	onPress={() =>
-				// navigation.navigate("SampleFeeds", {
-				//   capitalData: item.buss_capital,
-				// })
-			  // }	
-			  
-			  >
+			<View  key={index} style={styles.post}>
 
               <View style={styles.header}>
                 <Image
@@ -418,9 +269,20 @@ const handleRefresh = () => {
               <Text style={styles.date}>{item.buss_address}</Text>
 
               </View>
+
+              <View style={styles.ribbon}>
+              <View style={styles.textContainer}>
+               <Text style={styles.ribbonText}>5%</Text>
+            </View>
+           </View>
+
               </View>
-              
-              <Text style={styles.description}> {item.buss_id} {item.buss_details}</Text>
+
+
+              <Text style={styles.description}> Business Name: {item.buss_name} {item.buss_type_name}</Text>
+              <Text style={styles.description}> {item.buss_summary}</Text>
+              <Text style={styles.description}> {item.buss_target_audience	}</Text>
+
               <Image style={{ height: 320, width: '100%' }}  source={{uri: item.buss_photo}} />
             
             <View style={styles.actions}>
@@ -446,18 +308,45 @@ const handleRefresh = () => {
               </TouchableOpacity>
             </View>
 
+            <View style={styles.actions}>
+            <Pressable onPress={() => {}} style={styles.actionButton}>
+            <TouchableOpacity
+             style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
+            //  onPress={() => setModalVisible(true)}
+            onPress={() =>
+        {
+          //pass data to invest file
+          setCapital(item.buss_capital),
+          setbussID(item.buss_id),
+          setreceiverID(item.user_id),
+          HandlepopUp(),
+          setModalVisible(true)
+        }
+			  }
+        >
+            <Text style={[styles.textStyle, { fontSize: textSize }]}>Navigate Invest</Text>
+           </TouchableOpacity>
+            </Pressable>
+
+            <Pressable onPress={() => {}} style={styles.actionButton}>
+            <TouchableOpacity
+             style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
+             onPress={() => {Notfication(item.user_id, item.buss_id)}}
+            >
+                <Text style={[styles.textStyle, { fontSize: textSize }]}>Notification Test</Text>
+           </TouchableOpacity>
+            </Pressable>
+
+
+            </View>
 
 
 
+			</View>
+
+      ))}
 
 
-
-
-			</TouchableOpacity>
-		  )}
-		  ref={(ref) => {
-			listViewRef = ref;
-		  }}/>
 
 </View>
       
@@ -470,7 +359,7 @@ const handleRefresh = () => {
 
 
 
-	  </SafeAreaView>
+</SafeAreaView>
 	);
   };
   
@@ -539,11 +428,14 @@ const handleRefresh = () => {
         marginHorizontal:10,
         shadowColor: '#000',
         shadowOpacity: 0.1,
-        shadowRadius: 5,
+        shadowRadius: 10,
         marginBottom:10,
         borderBottomWidth:0.5,
         borderBottomColor:'#808080',
-        padding:10,
+        padding:12,
+        backgroundColor: 'white',
+
+        
       },
       avatar: {
         width: 50,
@@ -573,7 +465,7 @@ const handleRefresh = () => {
         marginLeft: 10,
       },
       description: {
-        marginBottom: 10,
+        marginBottom: 4,
       },
       actions: {
         flexDirection: 'row',
@@ -669,11 +561,11 @@ const handleRefresh = () => {
       },
 
       button3: {
-        borderRadius: 20,
+        borderRadius: 14,
         padding: 10,
         elevation: 2,
         height:"100%",
-        width:"60%",
+        // width:"60%",
       },
       buttonOpen: {
         backgroundColor: '#F194FF',
@@ -690,8 +582,32 @@ const handleRefresh = () => {
         marginBottom: 15,
         textAlign: 'center',
       },
+
+      ribbon: {
+        position: 'absolute',
+        top: -10,
+        right: 10,
+        backgroundColor: 'transparent',
+        borderBottomRightRadius: 25,
+        borderBottomLeftRadius: 25,
+        borderLeftWidth: 25,
+        borderRightWidth: 25,
+        borderStyle: 'solid',
+        borderBottomWidth: 50,
+        borderColor: 'purple',
+      },
+      textContainer: {
+        position: 'absolute',
+        top: 20,
+        right: -8,
+      },
+      ribbonText: {
+        color: 'white',
+        fontSize: 16,
+      },    
+
     
 });
   
-  export default InvestorFeeds;
+  export default BusinessView;
   

@@ -79,6 +79,7 @@ export default function SignUpAccount() {
   var getyear = date.toLocaleDateString("default",{ year: "numeric"});
   // var dateformat = getyear + '-' + getmonth + '-' + getday;
 // Check if date is a valid date object
+
 if (!isNaN(date.getTime())) {
   var dateformat = getyear + '-' + getmonth + '-' + getday;
 } else {
@@ -192,13 +193,14 @@ useEffect(() => {
   
 
   const Signup = () => {
-    Axios.post("http://192.168.8.103:19001/signup", {
-      userType: selecteduserType,
+    Axios.post("http://192.168.8.103:19001/signupFinal", {
+      userType: selecteduserType.toLowerCase(),
       firstName: firstName,
       lastName: lastName,
       middleName: middleName,
-      bDate: dateformat,
+      bDate: bday,
       gender: selectedgender,
+      userage:userage,
       contactNum: contactNum,
       email: email,
       pass: pass,
@@ -248,7 +250,9 @@ useEffect(() => {
       if (pass === confirmPassword) {
         // Passwords match, you can proceed with your logic here.
         setPasswordsMatch(true);
+
         Signup();
+
       } else {
         // Passwords do not match, display an error message or take appropriate action.
         setPasswordsMatch(false);
@@ -257,6 +261,36 @@ useEffect(() => {
 
       }
     };
+
+    const handleValidation = () => {
+
+      if (!firstName || !lastName || !middleName || !bday || !selectedgender || !contactNum || !email || !pass || !selectedProvince || !selectedCity || !selectedBrgy) {
+        ToastAndroid.show("Please fill in all required fields", 
+        ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+
+        return; // Don't proceed with the submission if any field is empty
+
+      }
+     else{
+
+          if (pass === confirmPassword) {
+          // Passwords match, you can proceed with your logic here.
+          setPasswordsMatch(true);
+          Signup();
+
+        }
+        else {
+          // Passwords do not match, display an error message or take appropriate action.
+          setPasswordsMatch(false);
+          ToastAndroid.show("password doesnt match!",
+          ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+  
+        }
+
+     }
+
+    };
+
 
     const [isValid, setIsValid] = useState(true);
 
@@ -309,6 +343,27 @@ useEffect(() => {
     setcontactNum(sanitizedNumber);
   };
 
+const [userage, setUserAge ] = useState("")
+  const calculateAge = (birthdate) => {
+    const birthDate = new Date(birthdate);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+
+    // Check if the birthday has occurred this year
+    if (
+      today.getMonth() < birthDate.getMonth() ||
+      (today.getMonth() === birthDate.getMonth() &&
+        today.getDate() < birthDate.getDate())
+    ) {
+      return age - 1;
+    }
+
+    return age;
+  };
+  const handleSetAge = (birthdate) => {
+    setUserAge(calculateAge(birthdate));
+  };
+
 
 
   return (
@@ -321,7 +376,12 @@ useEffect(() => {
       contentContainerStyle={{flexGrow : 1, justifyContent : 'center',padding: "7%"}}>
    
    <Text style={{fontSize:20, paddingBottom:"2%", fontWeight:"500"}}>Personal Information</Text>
-         <Text style={{fontSize:14,paddingRight: "59%",}}>Firstname</Text>
+         <Text style={{fontSize:14,paddingRight: "59%",}}>
+         {!firstName  && (
+        <Text style={{color: 'red'}}>*</Text>
+      )}
+
+         Firstname</Text>
          <View style={styles.inputContainer}>
          <TextInput
            style={styles.input1}
@@ -332,7 +392,12 @@ useEffect(() => {
    
        </View>
 
-       <Text style={{fontSize:14,paddingRight: "59%",}}>Lastname</Text>
+       <Text style={{fontSize:14,paddingRight: "59%",}}>
+       {!lastName  && (
+        <Text style={{color: 'red'}}>*</Text>
+      )}
+
+       Lastname</Text>
          <View style={styles.inputContainer}>
          <TextInput
            style={styles.input1}
@@ -345,8 +410,18 @@ useEffect(() => {
        
        <View style={{flexDirection:'row'}}>
 
-       <Text style={{fontSize:14,paddingRight: "30%",}}>Middlename</Text>
-       <Text style={{fontSize:14,paddingRight: "30%",}}>Gender</Text>
+       <Text style={{fontSize:14,paddingRight: "30%",}}>
+       {!middleName  && (
+        <Text style={{color: 'red'}}>*</Text>
+      )}
+       Middlename
+       </Text>
+       <Text style={{fontSize:14,paddingRight: "30%",}}>
+       {!selectedgender  && (
+        <Text style={{color: 'red'}}>*</Text>
+      )}
+
+       Gender</Text>
        </View>
        <View style={{flexDirection:'row'}}>
          <View style={styles.inputContainer}>
@@ -387,13 +462,17 @@ useEffect(() => {
 
        </View>
        
-       <Text style={{fontSize:14,paddingRight: "59%",}}>Birthday</Text>
+       <Text style={{fontSize:14,paddingRight: "59%",}}>
+       {!bday  && (
+        <Text style={{color: 'red'}}>*</Text>
+      )}
+      Birthday</Text>
        <View style={{flexDirection:'row'}}>
          <View style={styles.inputContainer}>
          <TextInput
            style={styles.inputbday}
            editable= {false}
-        value={dateformat}
+        value={bday ? new Date(bday).toLocaleDateString() : "Birthdate"}
 
          />
    
@@ -402,21 +481,30 @@ useEffect(() => {
        <AntDesign 
       style={{marginTop:"2%"}}
       name="calendar" size={25} color="black" 
-        onPress={() => setShowCalendar(!showCalendar)}
+        onPress={() => {setShowCalendar(!showCalendar)
+        
+        }}
+
+
       />
 
        </View>
 
        <View style={{flexDirection:'row'}}>
         {showCalendar ? (
-        <CalendarPicker width={320} height={320} onDateChange={(res) => setBday(res)} />
+        <CalendarPicker width={320} height={320} onDateChange={(res) => {setBday(res), handleSetAge(res)}} />
       ) : (
         ""
       )}
 </View>
 
 
-       <Text style={{fontSize:14,paddingRight: "59%",}}>Contact Number</Text>
+       <Text style={{fontSize:14,paddingRight: "59%",}}>
+       {!contactNum  && (
+        <Text style={{color: 'red'}}>*</Text>
+      )}
+
+       Contact Number</Text>
          <View style={styles.inputContainer}>
          <TextInput
            style={[styles.input1, !isValid && styles.inputError]}
@@ -435,7 +523,11 @@ useEffect(() => {
 
 
 
-       <Text style={{fontSize:14,paddingRight: "59%",}}>Province</Text>
+       <Text style={{fontSize:14,paddingRight: "59%",}}>
+       {!selectedProvince  && (
+        <Text style={{color: 'red'}}>*</Text>
+      )}
+       Province</Text>
          <SelectDropdown
         data={provinceData}
         defaultButtonText={'Select province'}
@@ -467,7 +559,11 @@ useEffect(() => {
 
 
 
-       <Text style={{fontSize:14,paddingRight: "59%",}}>Address</Text>
+       <Text style={{fontSize:14,paddingRight: "59%",}}>
+       {!selectedCity  && (
+        <Text style={{color: 'red'}}>*</Text>
+      )}
+      Address</Text>
        <View style={{flexDirection:'row'}}>
          <SelectDropdown
         data={cityData}
@@ -535,7 +631,12 @@ useEffect(() => {
        <Text style={{fontSize:20, paddingBottom:"2%",fontWeight:"500"}}>Account Information</Text>
 
 
-       <Text style={{fontSize:14,paddingRight: "59%",}}>User Type</Text>
+       <Text style={{fontSize:14,paddingRight: "59%",}}>
+       {!selecteduserType  && (
+        <Text style={{color: 'red'}}>*</Text>
+      )}
+
+       User Type</Text>
          {/* <View style={styles.inputContainer}> */}
          <SelectDropdown
               data={userType}
@@ -566,7 +667,12 @@ useEffect(() => {
        {/* </View> */}
 
 
-       <Text style={{fontSize:14,paddingRight: "59%",}}>Username</Text>
+       <Text style={{fontSize:14,paddingRight: "59%",}}>
+       {!email  && (
+        <Text style={{color: 'red'}}>*</Text>
+      )}
+
+       Username</Text>
          <View style={styles.inputContainer}>
          <TextInput
            style={styles.input1}
@@ -579,7 +685,12 @@ useEffect(() => {
    
        </View>
 
-       <Text style={{fontSize:14,paddingRight: "59%"}}>Password</Text>
+       <Text style={{fontSize:14,paddingRight: "59%"}}>
+       {!pass  && (
+        <Text style={{color: 'red'}}>*</Text>
+      )}
+
+       Password</Text>
          <View style={styles.inputContainer}>
          <TextInput
            style={styles.inputbday}
@@ -605,7 +716,12 @@ useEffect(() => {
         </Text>
       )}
 
-       <Text style={{fontSize:14,paddingRight: "59%"}}>Confirm Password</Text>
+       <Text style={{fontSize:14,paddingRight: "59%"}}>
+       {!confirmPassword  && (
+        <Text style={{color: 'red'}}>*</Text>
+      )}
+
+       Confirm Password</Text>
          <View style={styles.inputContainer}>
          <TextInput
            style={styles.inputbday}
@@ -649,7 +765,7 @@ useEffect(() => {
    
    
          
-      <TouchableOpacity style={styles.button}  onPress={() => handleConfirmPassword()} >
+      <TouchableOpacity style={styles.button}  onPress={() => handleValidation()} >
         <Text style={{ color:'#ffffff' }}>Create </Text> 
       </TouchableOpacity> 
         
