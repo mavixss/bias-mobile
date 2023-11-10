@@ -7,6 +7,8 @@ import { storage, getDownloadURL, ref, uploadBytes } from "./Firebase";
 import Axios from 'axios';
 import SelectDropdown from "react-native-select-dropdown";
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import {NETWORK_ADD} from '@env';
+
 
 const VerifyID = () => {
 
@@ -123,7 +125,9 @@ ImageUrl(downloadUrl);
 
 
   const ImageUrl = (url) => {
-    Axios.post("http://192.168.8.103:19001/IDimage", {
+    // Axios.post("http://192.168.8.103:19001/IDimage", {
+      Axios.post(`${NETWORK_ADD}:19001/IDimage`, {
+
       imageURL: JSON.stringify(url),
     })
       .then((res) => console.log(res.data), ToastAndroid.show(

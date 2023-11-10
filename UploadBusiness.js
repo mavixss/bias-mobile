@@ -32,6 +32,8 @@ import * as DocumentPicker from "expo-document-picker";
 import { MaterialIcons } from '@expo/vector-icons';
 import { Checkbox } from 'react-native-paper';
 import { Loan } from 'loanjs';
+import {NETWORK_ADD} from '@env';
+
 
 
 
@@ -199,8 +201,9 @@ useEffect(() => {
   
 
   const Pitch = () => {
-    Axios.post("http://192.168.8.103:19001/pitch", {
-      user: user,
+    // Axios.post("http://192.168.8.103:19001/pitch", {
+      Axios.post(`${NETWORK_ADD}:19001/pitch`, {
+        user: user,
       businessName: businessName,
       businessTypeSelectd: businessTypeSelectd,
       businessCapital: businessCapital,
@@ -240,7 +243,9 @@ useEffect(() => {
 
 
   const PitchFinal  = () => {
-    Axios.post("http://192.168.8.103:19001/pitchFinal", {
+    // Axios.post("http://192.168.8.103:19001/pitchFinal", {
+      Axios.post(`${NETWORK_ADD}:19001/pitchFinal`, {
+
       user: user,
       businessName: businessName,
       businessTypeSelectd: businessTypeSelectd,
@@ -507,8 +512,9 @@ const FilessUpload = async () => {
 
 
   const FileUrl = () => {
-    Axios.post("http://192.168.8.103:19001/fileUpload", {
-      fileURL: fileURL,
+    // Axios.post("http://192.168.8.103:19001/fileUpload", {
+      Axios.post(`${NETWORK_ADD}:19001/fileUpload`, {
+        fileURL: fileURL,
     })
       .then((res) => console.log(res.data), ToastAndroid.show(
         "File sucessfully added!",
@@ -562,7 +568,9 @@ const DocFilesUpload = async () => {
 
 
   const DocFileUrl = () => {
-    Axios.post("http://192.168.8.103:19001/fileUpload", {
+    // Axios.post("http://192.168.8.103:19001/fileUpload", {
+      Axios.post(`${NETWORK_ADD}:19001/fileUpload`, {
+
       fileURL: docfileURL,
     })
       .then((res) => console.log(res.data), ToastAndroid.show(

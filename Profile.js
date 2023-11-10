@@ -9,6 +9,7 @@ import { update } from 'firebase/database';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Axios from "axios";
 import { Ionicons } from '@expo/vector-icons';
+import {NETWORK_ADD} from '@env';
 
 const Profile = () => {
   const navigation = useNavigation();
@@ -37,7 +38,9 @@ const Profile = () => {
   const[dataID, setData] = useState([]);
 
     useEffect(() => {
-      Axios.post("http://192.168.8.103:19001/testID",{
+      // Axios.post("http://192.168.8.103:19001/testID",{
+        Axios.post(`${NETWORK_ADD}:19001/testID`,{
+
         user:user
       })
         // .then((res) => setData(res.data.results[0]))

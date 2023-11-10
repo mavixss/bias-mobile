@@ -9,21 +9,25 @@ import { update } from 'firebase/database';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Axios from "axios";
 import { Ionicons } from '@expo/vector-icons';
-import { useRoute } from '@react-navigation/native';
 import {NETWORK_ADD} from '@env';
 
-
-
-const ProfileView = ({data}) => {
+const ProfileEntrep = () => {
   const navigation = useNavigation();
-  const route = useRoute();
-//   const id = route.params.id; //from feeds
-const id = data[0];
-
-
   const [isDisabled, setDisabled] = useState(false);
   const [useSearch, setSearch] = useState("");
 
+
+  const handlePresss = () => {
+    setDisabled(true);
+    setTimeout(() => setDisabled(false), 3000);
+  };
+
+  const [isDisabledd, setDisabledd] = useState(false);
+
+  const handlePressss = () => {
+    setDisabledd(true);
+    setTimeout(() => setDisabledd(false), 3000);
+  };
 
 
   const[user, setUser] = useState('');
@@ -34,8 +38,10 @@ const id = data[0];
   const[dataID, setData] = useState([]);
 
     useEffect(() => {
-      Axios.post(`${NETWORK_ADD}:19001/getIdFinal`,{
-        user:id
+      // Axios.post("http://192.168.8.103:19001/testID",{
+        Axios.post(`${NETWORK_ADD}:19001/testID`,{
+
+        user:user
       })
         // .then((res) => setData(res.data.results[0]))
         .then((res) => setData(res.data.results)
@@ -71,7 +77,20 @@ return (
 <View style={styles.container}>
 {/* <Text>{user}</Text> */}
 <View style={{flexDirection:'row'}}>
+      <View style={styles.searchContainer}>
+      {/* <TextInput
+          style={styles.searchInput}
+          onChangeText={text => setSearch(text)}
+          placeholder="Search post.."
+          value={useSearch}
+        /> */}
+      </View>
 
+        <TouchableOpacity style={{marginTop:"5%"}}
+        onPress={() => navigation.navigate('Settings')}
+        >
+       <Ionicons name="ios-reorder-three-outline" size={36} color="black" />
+    </TouchableOpacity>
 </View>
 
 
@@ -127,12 +146,31 @@ return (
         </View>
       </View>
 
+      {/* <TouchableOpacity
+      onPress={handlePresss}
+      style={[ styles.button,
+        isDisabled && styles.appButtonDisabled
+      ]}
+      disabled={isDisabled}
+    >
+      <Text style={styles.buttonText}>Following</Text>
+    </TouchableOpacity> */}
+    <TouchableOpacity
+      onPress={() =>
+				navigation.navigate("Verify ID")}		
+      style={[ styles.buttonn,
+        isDisabledd && styles.appButtonDisabled
+      ]}
+      disabled={isDisabledd}
+    >
+      <Text style={styles.buttonText}>Verify Now!</Text>
+    </TouchableOpacity>
+
 
 </View>
 
   )}
   />
-
 
 
 
@@ -144,7 +182,7 @@ return (
 );
 };
 
-export default ProfileView;
+export default ProfileEntrep;
 
 const styles = StyleSheet.create({
 

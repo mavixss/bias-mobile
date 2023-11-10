@@ -15,18 +15,15 @@ import CalendarPicker from 'react-native-calendar-picker';
 import { AntDesign } from '@expo/vector-icons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from '@react-navigation/native';
+import {NETWORK_ADD} from '@env';
+
 
 
 export default function SignUpAccount() {
 
   const navigation = useNavigation();
-
-
-
-
   const [selecteduserType, setselecteduserType] = useState("");
   const [selectedgender, setselectedGender] = useState("");
-
   const [userType, setuserType] = useState("");
   const [firstName, setfirstName] = useState("");
   const [lastName, setlastName] = useState("");
@@ -52,11 +49,7 @@ export default function SignUpAccount() {
   const [cityData, setCity] = useState([]);
   const [barangayData, setBarangay] = useState([]);
   const [barangaynameData, setBarangayname] = useState([]);
-
-
-
   const [selectedRegion, setselectedRegion] = useState("");
-
   const [selectedProvince, setselectedProvince] = useState("");
   const [selectedCity, setselectedCity] = useState("");
   const [selectedBrgy, setselectedBrgy] = useState("");
@@ -143,8 +136,7 @@ useEffect(() => {
 
         const typeOfUser = (e) => {
           setselecteduserType(e.title);
-
-        
+  
     }
 
     const typeOfGender = (e) => {
@@ -182,18 +174,20 @@ useEffect(() => {
 
 
 
-  //to display data
-  useEffect(() => {
-    fetch("http://192.168.8.171:19001/userss")
-      .then((res) => res.json())
-      .then((data) => setData(data))
-      .catch((error) => console.log(error));
-  }, []);
+  // //to display data
+  // useEffect(() => {
+  //   fetch("http://192.168.8.171:19001/userss")
+  //     .then((res) => res.json())
+  //     .then((data) => setData(data))
+  //     .catch((error) => console.log(error));
+  // }, []);
 
   
 
   const Signup = () => {
-    Axios.post("http://192.168.8.103:19001/signupFinal", {
+    // Axios.post("http://192.168.8.103:19001/signupFinal", {
+      Axios.post(`${NETWORK_ADD}:19001/signupFinal`, {
+
       userType: selecteduserType.toLowerCase(),
       firstName: firstName,
       lastName: lastName,
@@ -622,15 +616,7 @@ const [userage, setUserAge ] = useState("")
 
        </View>
 
-
-
-
-
-
-
        <Text style={{fontSize:20, paddingBottom:"2%",fontWeight:"500"}}>Account Information</Text>
-
-
        <Text style={{fontSize:14,paddingRight: "59%",}}>
        {!selecteduserType  && (
         <Text style={{color: 'red'}}>*</Text>

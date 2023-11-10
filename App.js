@@ -15,7 +15,7 @@ import Axios from 'axios';
 import { useEffect, useState, forwardRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from 'react-native-toast-message';
-import {REACT_APP_NETWORK_ADD} from '@env'
+import {NETWORK_ADD} from '@env';
 
 import Login from './Login';
 import PitchBusiness from './PitchBusiness';
@@ -48,7 +48,6 @@ const SampleFeeds = React.lazy(() => import('./SampleFeeds'));
 const EditProfile = React.lazy(() => import('./EditProfile'));
 const Profile = React.lazy(() => import('./Profile'));
 const Settings = React.lazy(() => import('./Settings'));
-const Return = React.lazy(() => import('./Return'));
 const Upload = React.lazy(() => import('./Upload'));
 import NotifPopup from './NotifPopup';
 import NotiFile from './NotiFile';
@@ -56,6 +55,14 @@ import Authentication from './Authentication'
 import EntrepFeeds from './EntrepFeeds';
 import Search from './Search';
 import BusinessView from './BussinessView';
+import TestingScreen from './TestingScreen';
+import TimelineScreen from './TimelineScreen';
+import Timeline from './Timeline';
+import AddItems from './AddItems';
+import InvestorsList from './InvestorsList';
+import Return from './Return';
+import InvestorsReturn from './InvestorsReturn';
+import BusinessViewEntrep from './BusinessViewEntrep';
 const Tab = createBottomTabNavigator();
 const Top = createMaterialTopTabNavigator();
 
@@ -76,7 +83,7 @@ const findUser = async () => {
 	  }
 	// setUser(JSON.parse(result))
 	// Axios.post("http://192.168.8.103:19001/getNotifCount",{
-	Axios.post(`${REACT_APP_NETWORK_ADD}:19001/getNotifCount`,{
+	Axios.post(`${NETWORK_ADD}:19001/getNotifCount`,{
 
 				user:result
 			})
@@ -130,8 +137,8 @@ const findUser = async () => {
 	 
 	 <Tab.Screen name="Feeds" 
 	//   component={SampleFeeds} 
-	// component={Search} 
-	component={InvestorsFeeds} 
+	component={Search} 
+	// component={InvestorsFeeds} 
 
 		options={{
 		headerShown: false,
@@ -211,7 +218,7 @@ function Entreprenuer() {
 		  }
 		// setUser(JSON.parse(result))
 		// Axios.post("http://192.168.8.103:19001/getNotifCount",{
-		Axios.post(`${REACT_APP_NETWORK_ADD}:19001/getNotifCount`,{
+		Axios.post(`${NETWORK_ADD}:19001/getNotifCount`,{
 
 					user:result
 				})
@@ -299,7 +306,7 @@ function Entreprenuer() {
 		 />
 	
 	<Tab.Screen name="Return" 
-		  component={Wallet} 
+		  component={TopTabEntrep} 
 		   options={{
 			// headerStyle: {
 			//     height: 100, // Adjust the height as needed
@@ -329,21 +336,22 @@ function Entreprenuer() {
 	}
 	
 
+	// import { TopTabEntrep } from './TopTabEntrep'; // Import the function from the appropriate path
 
-function MyTabs() {
+	export function TopTabEntrep() {
 	return (
 	  <Top.Navigator
 	  
 	  screenOptions={{
 	 headerShown: false,
  }}>
-		<Top.Screen name="Returns" component={Return} 
+		<Top.Screen name="Returns" component={InvestorsList} 
 		options={{
 		headerShown: false,
 		 tabBarLabel: 'Return',
 	   }}
 		/>
-		<Top.Screen name="Wallet" component={Wallet} />
+		<Top.Screen name="Wallet" component={InvestorsList} />
 	  </Top.Navigator>
 	);
   }  
@@ -494,6 +502,12 @@ function App() {
 		 <Stack.Screen name="ProfileView" component={ProfileView} />
 		 <Stack.Screen name="ProfileViewFeeds" component={ProfileViewFeeds} />
 		 <Stack.Screen name="Forgot Password" component={ForgotPass} />
+		 <Stack.Screen name="TestingScreen" component={TestingScreen} />
+		 <Stack.Screen name="TimelineScreen" component={TimelineScreen} />
+		 <Stack.Screen name="Timeline" component={Timeline} />
+		 <Stack.Screen name="AddItems" component={AddItems} />
+		 <Stack.Screen name="InvestorsReturn" component={InvestorsReturn} />
+		 <Stack.Screen name="BusinessViewEntrep" component={BusinessViewEntrep} />
 		 <Stack.Screen name="Entreprenuer" 
 		 options={{ headerShown: false }}
 		 component={Entreprenuer} />

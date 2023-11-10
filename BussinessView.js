@@ -29,6 +29,8 @@ import {
   import { Modal } from "react-native-paper";
   import Invest from "./Invest";
   import LoadingScreen from "./LoadingScreen";
+  import {NETWORK_ADD} from '@env';
+
 
   
 const BusinessView = () => {
@@ -98,14 +100,14 @@ useEffect(() => {
 }, []);
 
 
-useEffect(() => {
-  Axios.get("http://192.168.8.103:19001/ViewBussiness")
-    // Axios.get(`${process.env.REACT_APP_NETWORK_ADD}:19001/getFeedsDisplay`)
-    .then((result) => {setnewsfeedsData(result.data)
-    // console.log(result.data[0].buss_user_id);
-    }) 
-  .catch((error) => console.log(error))
-  },[newsfeedsData]);
+// useEffect(() => {
+//   Axios.get("http://192.168.8.103:19001/ViewBussiness")
+//     // Axios.get(`${process.env.REACT_APP_NETWORK_ADD}:19001/getFeedsDisplay`)
+//     .then((result) => {setnewsfeedsData(result.data)
+//     // console.log(result.data[0].buss_user_id);
+//     }) 
+//   .catch((error) => console.log(error))
+//   },[newsfeedsData]);
 
 
   
@@ -123,7 +125,9 @@ useEffect(() => {
     // console.log(id);
     setUser(id)
 
-    Axios.post("http://192.168.8.103:19001/getIdFinal",{
+    // Axios.post("http://192.168.8.103:19001/getIdFinal",{
+      Axios.post(`${NETWORK_ADD}:19001/getIdFinal`,{
+
         user:id
       })
         // .then((res) => setData(res.data.results[0]))
@@ -146,7 +150,8 @@ useEffect(() => {
 
   const Notfication = (findBussinessUser, findBussinessID) => {
     
-    Axios.post("http://192.168.8.103:19001/notif", {
+    // Axios.post("http://192.168.8.103:19001/notif", {
+      Axios.post(`${NETWORK_ADD}:19001/notif`, {
       notifMsg: notifMsg,
       user:user,
       createdAt:createdAt,
@@ -187,28 +192,6 @@ useEffect(() => {
 
 
 
-//for drag to refresh
-const [refreshing, setRefreshing] = useState(false);
-
-
-useEffect(() => {
-  // Fetch your initial data here
-  fetchData();
-}, []);
-
-const fetchData = () => {
-  // Simulate fetching data
-  setTimeout(() => {
-    const newData = [...newsfeedsData, { key: Date.now().toString() }];
-    setnewsfeedsData(newData);
-    setRefreshing(false);
-  }, 1000);
-};
-
-const handleRefresh = () => {
-  setRefreshing(true);
-  fetchData();
-};
 
 
   // Get the screen dimensions
@@ -222,17 +205,34 @@ const handleRefresh = () => {
 
 
   useEffect(() => {
-    Axios.post("http://192.168.8.103:19001/ViewBussiness",{
-      bussID:id
+    // Axios.post("http://192.168.8.103:19001/ViewBussiness",{
+      Axios.post(`${NETWORK_ADD}:19001/ViewBussiness`,{
+        bussID:id
     })
       // .then((res) => setData(res.data.results[0]))
-      .then((res) => setViewBusiness(res.data.results)
+      .then((res) => setnewsfeedsData(res.data.result)
       )
   
       //  .then((data) => setData(data)
       .catch((error) => console.log(error));
   
-  }, [viewBusiness]);
+  }, [newsfeedsData]);
+
+//for duplication
+  const renderUniqueInvestors = (investments = []) => {
+    const uniqueInvestors = new Map();
+    const uniqueInvestorProfiles = [];
+
+    investments.forEach((investment) => {
+      if (!uniqueInvestors.has(investment.investor_id)) {
+        uniqueInvestors.set(investment.investor_id, true);
+        uniqueInvestorProfiles.push(investment);
+      }
+    });
+
+    return uniqueInvestorProfiles;
+  };
+
 
 
 
@@ -244,7 +244,7 @@ const handleRefresh = () => {
 
 
 	return (
-	  <SafeAreaView style={{ flex: 1, height: "100%", marginTop:"5%" }}>
+	  <SafeAreaView style={{ flex: 1, height: "100%", marginTop:"2%" }}>
 
 {isLoading ? (
 
@@ -252,14 +252,14 @@ const handleRefresh = () => {
 ):(
 
   <View style={{maxHeight:"86%"}}>
-  {viewBusiness.map((item, index) => (
+  {newsfeedsData.map((item, index) => (
 
 			<View  key={index} style={styles.post}>
 
               <View style={styles.header}>
                 <Image
                   style={styles.avatar}
-                  source={require("./assets/profilee.png")}
+                  source={item.user_profile ? { uri: item.user_profile } : require("./assets/prrofilee.png")} 
                 />
                 <View>
             <Text style={styles.name}> {item.user_id} {item.user_fname} {item.user_lname}
@@ -284,6 +284,30 @@ const handleRefresh = () => {
               <Text style={styles.description}> {item.buss_target_audience	}</Text>
 
               <Image style={{ height: 320, width: '100%' }}  source={{uri: item.buss_photo}} />
+              <View style={styles.actions}>
+        
+        <View style={styles.attendeesContainer}>
+           {renderUniqueInvestors(item.investments).map((investment, index) => (
+             index < 3 ? (
+           <View key={index}>
+            <Image
+             source={investment.investor_profile ? { uri: investment.investor_profile } : require("./assets/prrofilee.png")}
+             style={styles.attendeeImage}
+            />
+          </View>
+           ) : null
+       ))}
+          {renderUniqueInvestors(item.investments).length > 3 && (
+            <View style={styles.plusContainer}>
+              <Text style={styles.plusText}>+{renderUniqueInvestors(item.investments).length - 3}</Text>
+            </View>
+    )}
+        </View>
+
+
+            </View>
+            
+            
             
             <View style={styles.actions}>
                 <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
@@ -328,12 +352,16 @@ const handleRefresh = () => {
            </TouchableOpacity>
             </Pressable>
 
+
+
             <Pressable onPress={() => {}} style={styles.actionButton}>
             <TouchableOpacity
              style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
-             onPress={() => {Notfication(item.user_id, item.buss_id)}}
+             onPress={() => {
+          navigation.navigate('Timeline', { id: item.buss_id });//pass data to timeline
+        }}
             >
-                <Text style={[styles.textStyle, { fontSize: textSize }]}>Notification Test</Text>
+                <Text style={[styles.textStyle, { fontSize: textSize }]}>View Timeline</Text>
            </TouchableOpacity>
             </Pressable>
 
@@ -604,7 +632,23 @@ const handleRefresh = () => {
       ribbonText: {
         color: 'white',
         fontSize: 16,
-      },    
+      },  
+      
+      attendeesContainer: {
+        flexWrap:'wrap',
+        flexDirection: 'row',
+        paddingHorizontal: 10,
+      },
+    
+      attendeeImage: {
+        width: 30,
+        height: 30,
+        borderRadius: 20,
+        marginLeft: -10,
+        borderWidth:0.5,
+        marginTop:3,
+      },
+
 
     
 });

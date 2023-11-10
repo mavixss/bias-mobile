@@ -22,18 +22,17 @@ import {
   import { AntDesign, Ionicons   } from '@expo/vector-icons';
   import Axios from 'axios';
   import AsyncStorage from "@react-native-async-storage/async-storage";
-
   import { useRoute } from '@react-navigation/native';
-
   import React, { useEffect, useState } from "react";
   import { useNavigation } from "@react-navigation/native";
-  
   import { StatusBar } from "expo-status-bar";
   import Upload from "./Upload";
-import { Modal } from "react-native-paper";
-import Invest from "./Invest";
-import LoadingScreen from "./LoadingScreen";
-import Profile from "./Profile";
+  import { Modal } from "react-native-paper";
+  import Invest from "./Invest";
+  import LoadingScreen from "./LoadingScreen";
+  import Profile from "./Profile";
+  import {NETWORK_ADD} from '@env';
+
 
   
   const ProfileFeeds = () => {
@@ -50,7 +49,6 @@ const [image, setImage] = useState(null);
 const [imageFilename, setImageFilename] = useState("");
 const [imageURL, setimageURL] = useState("");
 
-const [imagedataURL, setimagedataURL] = useState([]);
 const [newsfeedsData, setnewsfeedsData] = useState([]);
 
 
@@ -110,15 +108,11 @@ useEffect(() => {
   }, 2000); // Simulate a 2-second loading time
 }, []);
 
-useEffect(() => {
-Axios.get("http://192.168.8.103:19001/getBusiness")
-.then((result) => setimagedataURL(result.data)) 
-.catch((error) => console.log(error))
-},[imagedataURL]);
+
 
 useEffect(() => {
-  Axios.get("http://192.168.8.103:19001/getFeedsDisplay")
-    // Axios.get(`${process.env.REACT_APP_NETWORK_ADD}:19001/getFeedsDisplay`)
+  // Axios.get("http://192.168.8.103:19001/getFeedsDisplay")
+    Axios.get(`${NETWORK_ADD}:19001/getFeedsDisplay`)
     .then((result) => {setnewsfeedsData(result.data)
     // console.log(result.data[0].buss_user_id);
     }) 
@@ -138,7 +132,8 @@ const notifMsg = dataID + msg;
     // console.log(dataID);
 
     useEffect(() => {
-      Axios.post("http://192.168.8.103:19001/testID",{
+      // Axios.post("http://192.168.8.103:19001/testID",{
+        Axios.post(`${NETWORK_ADD}:19001/testID`,{
         user:user
       })
         // .then((res) => setData(res.data.results[0]))
@@ -152,7 +147,8 @@ const notifMsg = dataID + msg;
 
 
     useEffect(() => {
-        Axios.post("http://192.168.8.103:19001/ProfileFeeds",{
+        // Axios.post("http://192.168.8.103:19001/ProfileFeeds",{
+          Axios.post(`${NETWORK_ADD}:19001/ProfileFeeds`,{
           user:user
         })
           // .then((res) => setData(res.data.results[0]))
@@ -184,7 +180,9 @@ const notifMsg = dataID + msg;
 
 
   const Notfication = (findBussinessUser, findBussinessID) => {
-    Axios.post("http://192.168.8.103:19001/notif", {
+    // Axios.post("http://192.168.8.103:19001/notif", {
+      Axios.post(`${NETWORK_ADD}:19001/notif`, {
+
       notifMsg: notifMsg,
       user:user,
       createdAt:createdAt,
@@ -206,7 +204,8 @@ const notifMsg = dataID + msg;
 
 
   const Status = (findBussinessID) => {
-    Axios.post("http://192.168.8.103:19001/BussStatus", {
+    // Axios.post("http://192.168.8.103:19001/BussStatus", {
+      Axios.post(`${NETWORK_ADD}:19001/BussStatus`, {
       status: status,
       bussID:findBussinessID,
 
@@ -241,32 +240,6 @@ const notifMsg = dataID + msg;
   }
 
 
-  const Test = () => {
-    Axios.post("http://192.168.8.103:19001/testbussID", {
-      // Axios.post(`${process.env.REACT_APP_NETWORK_ADD}:19001/testLogin`, {
-      //  user: user,
-    })
-    
-    .then((res) =>  
-    {
-      // console.log(findBussinessUser),
-
-      //  console.log(res.data.results[0].buss_address)
-
-      if(res.data.success)
-      {
-        handleSubmit(res.data.results[0].buss_id)
-        // ToastAndroid.show("Welcome user!",
-        // ToastAndroid.SHORT,ToastAndroid.BOTTOM),
-        // navigation.navigate("Home")
-        // // navigation.navigate("Profile")
-  
-  
-      }
-    })
-    .catch((error) => console.log(error));
-    
-};
 
 
 //for drag to refresh

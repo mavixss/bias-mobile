@@ -8,8 +8,8 @@ import { AntDesign } from '@expo/vector-icons';
 import {NETWORK_ADD} from '@env';
 
 export default function Login() {
-  const networkAdd = NETWORK_ADD;
-console.log(networkAdd)
+  // const networkAdd = NETWORK_ADD;
+  // console.log(networkAdd)
   const navigation = useNavigation();
 
   const [email, setEmail] = useState("");
@@ -234,7 +234,7 @@ console.log(networkAdd)
       </TouchableOpacity>  */}
       
     <Text style={{fontSize:14, marginTop:30}}>Don't have an account?</Text>
-    <Text style={{fontSize:14, color:'#534c88', fontWeight:'500'}}  onPress={() => navigation.navigate("SignUpAccount")}>Signup</Text>
+    <Text style={{fontSize:14, color:'#534c88', fontWeight:'500'}}  onPress={() => navigation.navigate("AddItems")}>Signup</Text>
     <Text style={{fontSize:14, color:'#534c88', fontWeight:'500'}}  onPress={() => navigation.navigate("Forgot Password")}>Forgot Password</Text>
 
     </View>

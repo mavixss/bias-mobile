@@ -10,6 +10,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Slider from '@react-native-community/slider';
 import { Loan } from 'loanjs';
 import Paypal from './Paypal';
+import {NETWORK_ADD} from '@env';
+
 
 
 
@@ -48,7 +50,8 @@ export default function Invest({data, hidePopup}) {
       console.log(id);
       setUser(id)
   
-      Axios.post("http://192.168.8.103:19001/testID",{
+      // Axios.post("http://192.168.8.103:19001/testID",{
+        Axios.post(`${NETWORK_ADD}:19001/getIdFinal`,{
           user:id
         })
           // .then((res) => setData(res.data.results[0]))
@@ -219,7 +222,8 @@ const handleValidation = () => {
 
 
 const InvestFinal  = () => {
-  Axios.post("http://192.168.8.103:19001/investmentFinal", {
+  // Axios.post("http://192.168.8.103:19001/investmentFinal", {
+    Axios.post(`${NETWORK_ADD}:19001/investmentFinal`, {
     totalReturn: totalReturn,
     interest: interestRate,
     amountToInvest:amountInvest,
@@ -235,9 +239,10 @@ const InvestFinal  = () => {
       if(res.data.success){
         ToastAndroid.show("please wait for the approval",
         ToastAndroid.SHORT,ToastAndroid.BOTTOM),
-        ToastAndroid.show("investment succesfully requested!",
+        ToastAndroid.show("Investment succesfully requested!",
         ToastAndroid.LONG,ToastAndroid.BOTTOM) 
-        NotficationsFinal()
+        NotiFinal(res.data.results.insertId)
+        // NotficationsFinal()
         // NotficationFinal(res.data.results.insertId)
         // NotficationTypeInvest(res.data.results.insertId) //INVSTMNT ID
   
@@ -256,6 +261,54 @@ const InvestFinal  = () => {
     .catch((error) => console.log(error));
     
 };
+
+//newest database 11/08/2023
+const NotiFinal = (InvstmentID) => {
+
+  // Axios.post("http://192.168.8.103:19001/notificationFinal", {
+    Axios.post(`${NETWORK_ADD}:19001/notificationFinal`, {
+
+    findBussinessUser: senderID, //user_id_reciever
+    createdAt:createdAt, //notif_created_at
+  })
+    .then((res) =>  
+    {
+      if(res.data.success)
+      {
+        ToastAndroid.show("Notifications.",
+        ToastAndroid.SHORT,ToastAndroid.BOTTOM),
+        NotifBusinessInvest(res.data.results.insertId,InvstmentID) //Notif ID
+      }
+      else 
+      {
+        ToastAndroid.show("Error!",
+        ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+
+      }
+    }
+
+    )
+    .catch((error) => console.log(error));
+    
+};
+
+//11/08/2023
+const NotifBusinessInvest  = (notifID,InvstmentID) => {
+    Axios.post(`${NETWORK_ADD}:19001/NotifBusinessInvest`, {
+    notifID:notifID, //notif_business_invest_id
+    notifMsg: notifMsg, //notif_content
+    findBussinessID: userbussID, //notif_business_table_id
+    invstID: InvstmentID, //notif_business_investment_id
+  })
+    .then((res) =>  
+      ToastAndroid.show("Notif_Business_Invest",
+      ToastAndroid.SHORT,ToastAndroid.BOTTOM), 
+    )
+    .catch((error) => console.log(error));
+    
+};
+
+
 
 
 const NotficationFinal = (invstID) => {
@@ -299,7 +352,8 @@ const NotficationFinal = (invstID) => {
 // the newest one
 const NotficationsFinal = () => {
 
-  Axios.post("http://192.168.8.103:19001/notificationsFinal", {
+  // Axios.post("http://192.168.8.103:19001/notificationsFinal", {
+    Axios.post(`${NETWORK_ADD}:19001/notificationsFinal`, {
     notifMsg: notifMsg,
     // notiftype:type,
     createdAt:createdAt,
@@ -371,7 +425,9 @@ const NotficationsFinal = () => {
 
 
 const NotficationTypeInvest  = (notifID,invstID) => {
-  Axios.post("http://192.168.8.103:19001/NotficationTypeInvest", {
+  // Axios.post("http://192.168.8.103:19001/NotficationTypeInvest", {
+    Axios.post(`${NETWORK_ADD}:19001/NotficationTypeInvest`, {
+
     notifID:notifID,
     invstID: invstID,
     

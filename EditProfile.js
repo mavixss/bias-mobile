@@ -822,6 +822,7 @@ import { storage, getDownloadURL, ref, uploadBytes } from "./Firebase";
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from "expo-document-picker";
 import { MaterialIcons } from '@expo/vector-icons';
+import {NETWORK_ADD} from '@env';
 
 
 export default function EditProfile() {
@@ -943,23 +944,15 @@ useEffect(() => {
         provinces(e.region_code).then((result) => setProvince(result));
         // setProvince(e.region_code); use to get the region code so that the province will appear accordingly
         //{"brgy_code": "072217053", "brgy_name": "Pardo (Pob.)", "province_code": "0722", "region_code": "07"} 47
-    }
+        }
 
         const typeOfUser = (e) => {
-          setselecteduserType(e.title);
-
-        
-    }
+          setselecteduserType(e.title);   
+        }
 
     const typeOfGender = (e) => {
       setselectedGender(e.title);
-
-    
-}
-
-
-
-
+      }
 
     const city = (e) => {
       setselectedProvince(e.province_name);
@@ -1078,7 +1071,9 @@ useEffect(() => {
     
     
     const Update = () => {
-      Axios.post("http://192.168.8.103:19001/updateProfileFinal", {
+      // Axios.post("http://192.168.8.103:19001/updateProfileFinal", {
+        Axios.post(`${NETWORK_ADD}:19001/updateProfileFinal`, {
+
         user:useer,
         userType: selecteduserType,
         firstName: firstName,
@@ -1202,8 +1197,9 @@ useEffect(() => {
   const[profileDisplay, setProfileDisplay] = useState([]);
 
   useEffect(() => {
-    Axios.post("http://192.168.8.103:19001/testID",{
-      user:useer
+    // Axios.post("http://192.168.8.103:19001/testID",{
+      Axios.post(`${NETWORK_ADD}:19001/getIdFinal`,{
+        user:useer
     })
       // .then((res) => setData(res.data.results[0]))
       .then((res) => setProfileDisplay(res.data.results)

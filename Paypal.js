@@ -14,7 +14,7 @@ import Feather from "react-native-vector-icons/Feather";
 import Axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from '@react-navigation/native';
-
+import {NETWORK_ADD} from '@env';
 
 
 
@@ -139,11 +139,11 @@ const[user, setUser] = useState('');
 
 
 
-  useEffect(() => {
-    Axios.get("http://192.168.8.103:19001/getWallet")
-    .then((result) => console.log(result.data[0].wlt_id)) 
-    .catch((error) => console.log(error))
-    },[]);
+  // useEffect(() => {
+  //   Axios.get("http://192.168.8.103:19001/getWallet")
+  //   .then((result) => console.log(result.data[0].wlt_id)) 
+  //   .catch((error) => console.log(error))
+  //   },[]);
 
    
 
@@ -163,10 +163,11 @@ const[user, setUser] = useState('');
 
 function onMessage(e) {
   let data = e.nativeEvent.data;
+  console.log(data)
+
   // Parse the JSON string into a JavaScript object
   try {
     const parsedData = JSON.parse(data);
-    
     // Access purchase_units
     const purchaseUnit = parsedData?.purchase_units?.[0] ?? {};
     // console.log("Purchase Unit Reference ID: " + (purchaseUnit.reference_id ?? 'N/A'));
@@ -182,13 +183,15 @@ function onMessage(e) {
 
 
 //for transaction
-    Axios.post("http://192.168.8.103:19001/TransactionInvest", {
+    // Axios.post("http://192.168.8.103:19001/TransactionInvest", {
+      Axios.post(`${NETWORK_ADD}:19001/TransactionInvest`,{
       user:user,
       amount: amount,
       type:type,
       name: name,
       email:email,
       formattedDate:formattedDate,
+      paypal_datalog: data
 
     })
   
@@ -196,7 +199,7 @@ function onMessage(e) {
       {
         if(res.data.success)
         {
-          ToastAndroid.show("Sucessfully invested!",
+          ToastAndroid.show("Paypal Sucessfully invested!",
           ToastAndroid.SHORT,ToastAndroid.BOTTOM),
           navigation.navigate("Home")
         }
@@ -254,7 +257,7 @@ function onMessage(e) {
             </View>
             <WebView
               // source={{ uri: `https://timely-tiramisu-0a768c.netlify.app/?amount=${amountInputted}` }}
-              source={{ uri: `http://192.168.8.103:3000/?amount=${amountInputted}` }}
+              source={{ uri: `http://192.168.254.127:3000/?amount=${amountInputted}` }}
 
               style={{ flex: 1 }}
               onLoadStart={() => {

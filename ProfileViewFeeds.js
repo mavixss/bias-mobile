@@ -23,12 +23,9 @@ import {
   import { AntDesign, Ionicons   } from '@expo/vector-icons';
   import Axios from 'axios';
   import AsyncStorage from "@react-native-async-storage/async-storage";
-
   import { useRoute } from '@react-navigation/native';
-
   import React, { useEffect, useState } from "react";
   import { useNavigation } from "@react-navigation/native";
-  
   import { StatusBar } from "expo-status-bar";
   import Upload from "./Upload";
 import { Modal } from "react-native-paper";
@@ -36,6 +33,8 @@ import Invest from "./Invest";
 import LoadingScreen from "./LoadingScreen";
 import Profile from "./Profile";
 import ProfileView from "./ProfileView";
+import {NETWORK_ADD} from '@env';
+
 
   
   const ProfileViewFeeds = () => {
@@ -104,11 +103,12 @@ useEffect(() => {
 
 
 useEffect(() => {
-    Axios.post("http://192.168.8.103:19001/ProfileViewFeeds",{
+    // Axios.post("http://192.168.8.103:19001/ProfileViewFeeds",{
+      Axios.post(`${NETWORK_ADD}:19001/ProfileViewFeeds`,{
       user:id
     })
       // .then((res) => setData(res.data.results[0]))
-      .then((res) => setnewsfeedsData(res.data.results)
+      .then((res) => setnewsfeedsData(res.data.result)
       )
 
       //  .then((data) => setData(data)
@@ -117,21 +117,6 @@ useEffect(() => {
   }, [newsfeedsData]);
 
   
-  const [results, setResults] = useState([]);
-
-
-  const handleSearch = async () => {
-    try {
-      const response = await Axios.get(
-        `http://192.168.8.103:19001/search?useSearch=${useSearch}`
-      );
-      setResults(response.data);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-
 
   const[user, setUser] = useState('');
   const[dataID, setData] = useState([]);
@@ -144,7 +129,8 @@ useEffect(() => {
     // console.log(id);
     setUser(id)
 
-    Axios.post("http://192.168.8.103:19001/getIdFinal",{
+    // Axios.post("http://192.168.8.103:19001/getIdFinal",{
+      Axios.post(`${NETWORK_ADD}:19001/getIdFinal`,{
         user:id
       })
         // .then((res) => setData(res.data.results[0]))
@@ -167,7 +153,8 @@ useEffect(() => {
 
   const Notfication = (findBussinessUser, findBussinessID) => {
     
-    Axios.post("http://192.168.8.103:19001/notif", {
+    // Axios.post("http://192.168.8.103:19001/notif", {
+      Axios.post(`${NETWORK_ADD}:19001/notif`, {
       notifMsg: notifMsg,
       user:user,
       createdAt:createdAt,
