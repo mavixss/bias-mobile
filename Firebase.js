@@ -12,12 +12,12 @@ import {
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyCmUxLvuSuME0ZeBvoJsfcOSevUMsiOD30",
-    authDomain: "filestorage-2e24e.firebaseapp.com",
-    projectId: "filestorage-2e24e",
-    storageBucket: "filestorage-2e24e.appspot.com",
-    messagingSenderId: "490250868782",
-    appId: "1:490250868782:web:188f33bc124790dd9f67bf"
+  apiKey: "AIzaSyAQCK02eP49v1JJsEvDRwYaKSoajnPERbE",
+  authDomain: "database-storage-9e165.firebaseapp.com",
+  projectId: "database-storage-9e165",
+  storageBucket: "database-storage-9e165.appspot.com",
+  messagingSenderId: "574889805175",
+  appId: "1:574889805175:web:1d074705b01569d17d4d72",
 };
 
 

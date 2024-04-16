@@ -26,14 +26,10 @@ import {
   import { useRoute } from '@react-navigation/native';
   import React, { useEffect, useState } from "react";
   import { useNavigation } from "@react-navigation/native";
-  import { StatusBar } from "expo-status-bar";
-  import Upload from "./Upload";
-import { Modal } from "react-native-paper";
-import Invest from "./Invest";
-import LoadingScreen from "./LoadingScreen";
-import Profile from "./Profile";
-import ProfileView from "./ProfileView";
-import {NETWORK_ADD} from '@env';
+  import LoadingScreen from "./LoadingScreen";
+  import Profile from "./Profile";
+  import ProfileViewEntrep from "./ProfileViewEntrep";
+  import {NETWORK_ADDPOCKET} from '@env';
 
 
   
@@ -52,8 +48,8 @@ const navigation = useNavigation();
 const [newsfeedsData, setnewsfeedsData] = useState([]);
 const [buttonStatus, setbuttonStatus] = useState(true);
 const [useSearch, setSearch] = useState("");
-
-
+//for drag to refresh
+const [refreshing, setRefreshing] = useState(false);
 //for loading screen
 const [isLoading, setIsLoading] = useState(true);
 
@@ -97,14 +93,13 @@ useEffect(() => {
   // Simulate an API call or data loading process
   setTimeout(() => {
     setIsLoading(false); // Set isLoading to false when data is loaded
-  }, 2000); // Simulate a 2-second loading time
+  }, 5000); // Simulate a 2-second loading time
 }, []);
 
 
 
 useEffect(() => {
-    // Axios.post("http://192.168.8.103:19001/ProfileViewFeeds",{
-      Axios.post(`${NETWORK_ADD}:19001/ProfileViewFeeds`,{
+      Axios.post(`${NETWORK_ADDPOCKET}/ProfileViewFeeds`,{
       user:id
     })
       // .then((res) => setData(res.data.results[0]))
@@ -130,11 +125,11 @@ useEffect(() => {
     setUser(id)
 
     // Axios.post("http://192.168.8.103:19001/getIdFinal",{
-      Axios.post(`${NETWORK_ADD}:19001/getIdFinal`,{
+      Axios.post(`${NETWORK_ADDPOCKET}/getIdFinal`,{
         user:id
       })
         // .then((res) => setData(res.data.results[0]))
-        .then((res) => {setData(res.data.results[0].user_fname)
+        .then((res) => {setData(res.data.results)
         console.log(res.data.results[0].user_fname)}
         )
 
@@ -151,25 +146,6 @@ useEffect(() => {
 
 
 
-  const Notfication = (findBussinessUser, findBussinessID) => {
-    
-    // Axios.post("http://192.168.8.103:19001/notif", {
-      Axios.post(`${NETWORK_ADD}:19001/notif`, {
-      notifMsg: notifMsg,
-      user:user,
-      createdAt:createdAt,
-      findBussinessUser: findBussinessUser,
-     findBussinessID: findBussinessID,
-
-
-    })
-      .then((res) =>  
-        ToastAndroid.show("Investment sucessfully requested.",
-        ToastAndroid.SHORT,ToastAndroid.BOTTOM),
-      )
-      .catch((error) => console.log(error));
-      
-  };
 
 
   const HandlepopUp =() =>{
@@ -194,8 +170,6 @@ useEffect(() => {
 
 
 
-//for drag to refresh
-const [refreshing, setRefreshing] = useState(false);
 
 
 useEffect(() => {
@@ -226,152 +200,242 @@ const handleRefresh = () => {
   const buttonHeight = height * 0.05;
   const textSize = Math.min(width, height) * 0.036;
 
+  const calculateTotalInvest = (investment) => {
+    if (Array.isArray(investment)) {
+      const investDetails = investment.map((item) => item.invest_amount);
+  
+      let totalSum = 0;
+  
+      for (let i = 0; i < investDetails.length; i++) {
+        totalSum += parseFloat(investDetails[i]);
+      }
+  
+      return totalSum;
+    } else {
+      return 0;
+    }
+  };
+
+
+  const handleAbbreviatedValue = (value) => {
+    if (value >= 1000000000) {
+      return (value / 1000000000).toFixed(1) + "B";
+    }
+    if (value >= 1000000) {
+      return (value / 1000000).toFixed(1) + "M";
+    }
+    if (value >= 1000) {
+      return (value / 1000).toFixed(1) + "K";
+    } else {
+      return value;
+    }
+  };
+
+
+  const renderUniqueInvestors = (investments = []) => {
+    const uniqueInvestors = new Map();
+    const uniqueInvestorProfiles = [];
+
+    investments.forEach((investment) => {
+      if (!uniqueInvestors.has(investment.investor_id)) {
+        uniqueInvestors.set(investment.investor_id, true);
+        uniqueInvestorProfiles.push(investment);
+      }
+    });
+
+    return uniqueInvestorProfiles;
+  };
 
   
 	return (
-	  <SafeAreaView style={{ flex: 1, height: "100%" }}>
-
-{isLoading ? (
-
-<LoadingScreen />
-):(
-
-//height for flatlist
-<View style={{maxHeight:"99%"}}>
-
-<FlatList
- ListEmptyComponent={
-    <View >
-        <Text style={styles.emptyListStyle}>
-            NO DATA FOUND
-        </Text>
-    </View>}
-
-    ListHeaderComponent={
-        <ProfileView data={[id]}/>
-    }
-
-  data={newsfeedsData}
-  keyExtractor={(item, index) => index.toString()}
-//for drag to refresh
-refreshControl={
-<RefreshControl
-  refreshing={refreshing}
-  onRefresh={handleRefresh}
-/>
-}
-  renderItem={({ item }) => (
-    <TouchableOpacity style={styles.post}
-onPress={() => {
-  navigation.navigate('BusinessView', { id: item.buss_id });
-}}
->
-
-      <View style={styles.header}>
-        <Image
-          style={styles.avatar}
-          source={item.user_profile ? { uri: item.user_profile } : require("./assets/prrofilee.png")} 
-        />
-        <View>
-    <Text style={styles.name}> {item.user_id} {item.user_fname} {item.user_lname}
-    {/* {item.name} */}
-    </Text>
-      <Text style={styles.date}>{formatDate(item.buss_created_at)}</Text>
-      <Text style={styles.date}>{item.buss_address}</Text>
-
-      </View>
-
-      <View style={styles.ribbon}>
-      <View style={styles.textContainer}>
-       <Text style={styles.ribbonText}>5%</Text>
-    </View>
-   </View>
-
-      </View>
-
-
-      <Text style={styles.description}> Business Name: {item.buss_name} {item.buss_type_name}</Text>
-      <Text style={styles.description}> {item.buss_summary}</Text>
-      <Text style={styles.description}> {item.buss_target_audience	}</Text>
-
-      <Image style={{ height: 320, width: '100%' }}  source={{uri: item.buss_photo}} />
+    <SafeAreaView style={{ flex: 1, height: "100%",  }}>
     
-    <View style={styles.actions}>
-        <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
-      <Text style={styles.actionText}>Business Status:</Text>
-      <Text style={styles.actionCount}>{item.buss_status}</Text>
-    </TouchableOpacity>
-    <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
-      <Text style={styles.actionText}>Capital:</Text>
-      <Text style={styles.actionCount}>{item.buss_capital}</Text>
-    </TouchableOpacity>
+    
+    
+    {isLoading ? (
+    
+    <LoadingScreen />
+    ):(
+    
+    //height for flatlist
+      <View style={{maxHeight:"99%"}}>
+    
+        <FlatList
+         ListEmptyComponent={
+          <View >
+            <Text style={styles.emptyListStyle}>
+              NO DATA FOUND
+            </Text>
+          </View>}
+          ListHeaderComponent={
+            <ProfileViewEntrep data={[id]}/>
+        }
+    
+          data={newsfeedsData}
+          keyExtractor={(item, index) => index.toString()}
+          //for drag to refresh
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+            />
+          }
+          renderItem={({ item }) => (
+          <View style={styles.post}
+          //to view business
+          onPress={() => {
+              navigation.navigate('Business', { id: item.buss_id });
+            }}
+    
+          >
+    
+                  <View style={styles.header}>
+                    <Image
+                      style={styles.avatar}
+                      source={item.user_profile ? { uri: item.user_profile } : require("./assets/prrofilee.png")} 
+                    />
+                    <View>
+                <Text style={styles.name}>{item.user_id} {item.user_fname} {item.user_lname}
+          {/* {item.name} */}
+          </Text>
+                  <Text style={styles.date}>{item.buss_type} {item.buss_name}</Text>
+                  <Text style={styles.date}>{formatDate(item.buss_created_at)}</Text>
+                  <Text style={styles.date}>{item.buss_address}</Text>
+    
+                  </View>
+    
+                  <View style={styles.ribbon}>
+                  <View style={styles.textContainer}>
+                   <Text style={styles.ribbonText}>5%</Text>
+                </View>
+               </View>
+                  </View>
+    
+                  <Text style={styles.description}>{item.buss_id} {item.buss_summary} </Text>
+                  {/* <Text style={styles.description}> {item.buss_target_audience} </Text> */}
+    
+                  <Image style={{ height: 320, width: '100%' }}  source={{uri: item.buss_photo}} />
+                  <View style={styles.actions}>
+            
+            <View style={styles.attendeesContainer}>
+               {renderUniqueInvestors(item.investments).map((investment, index) => (
+                 index < 3 ? (
+               <View key={index}>
+                <Image
+                 source={investment.investor_profile ? { uri: investment.investor_profile } : require("./assets/prrofilee.png")}
+                 style={styles.attendeeImage}
+                />
+              </View>
+               ) : null
+           ))}
+              {renderUniqueInvestors(item.investments).length > 3 && (
+                <View style={styles.plusContainer}>
+                  <Text style={styles.plusText}>+{renderUniqueInvestors(item.investments).length - 3}</Text>
+                </View>
+        )}
+            </View>
+    
+    
+    
+    
+    
+                </View>
+               
+    
+                <View style={styles.actions}>
+                    <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
+                  <Text style={styles.actionText}>Status:</Text>
+                  <Text style={styles.actionCount}>{item.buss_status}</Text>
+                </TouchableOpacity>
+    
+    
+                <View style={styles.actionButton}>
+                  <Text style={styles.actionText}>Capital:</Text>
+                  <Text style={styles.actionCount}>{handleAbbreviatedValue(item.buss_capital)}</Text>
+                </View>
+                {isNaN(item.buss_capital - calculateTotalInvest(item.investments)) ? (
+                  null
+                  ):(
+                <View  style={styles.actionButton}>
+                <Text style={styles.actionText}>Remaining:</Text>
+                  <Text style={styles.actionCount}>
+                  {handleAbbreviatedValue(
+                                parseFloat(
+                                  item.buss_capital -
+                                    calculateTotalInvest(item.investments)
+                                )
+                              )}              
+                  </Text>
+                  </View>
+                  )}
+    
+                </View>
+
+                <View style={styles.actions}>
+
+                {dataID ? (
+                  dataID.map((user, index) => (
+                    <View key={index}> 
+                    {user.user_status == "basic" ? (
+                      <Text style={styles.actionText}>Please verify your account to invest</Text>
+
+                    ):
+                    
+                    <Pressable onPress={() => {}} style={styles.actionButton}>
+          <TouchableOpacity
+           style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
+           onPress={() => {
+        navigation.navigate('Investment', { capital: item.buss_capital, buss_id: item.buss_id, user_id: item.user_id});
+      }}
+          >
+              <Text style={[styles.textStyle, { fontSize: textSize }]}>Investment</Text>
+         </TouchableOpacity>
+          </Pressable>
+
+                    }
+                    </View>
+                    ))
+                  ) : (
+                  null
+                )}          
+
+
+                
+                {/* <Pressable onPress={() => {}} style={styles.actionButton}>
+          <TouchableOpacity
+           style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
+           onPress={() => {
+        navigation.navigate('Investment', { capital: item.buss_capital, buss_id: item.buss_id, user_id: item.user_id});
+      }}
+          >
+              <Text style={[styles.textStyle, { fontSize: textSize }]}>Investment</Text>
+         </TouchableOpacity>
+          </Pressable> */}
+
+
+
     </View>
 
-    <View style={styles.actions}>
-        <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
-      <Text style={styles.actionText}>Amount Invested:</Text>
-      <Text style={styles.actionCount}>{item.totalAmountInvts}</Text>
-    </TouchableOpacity>
-    <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
-      <Text style={styles.actionText}>Remains:</Text>
-      {/* {item.totalAmountInvts ? (   <Text style={styles.actionCount}>{(item.buss_capital)-(item.totalAmountInvts)}</Text>) : ""} */}
-      <Text style={styles.actionCount}>{(item.buss_capital)-(item.totalAmountInvts)}</Text>            
-      </TouchableOpacity>
+    
+    
+          </View>
+          )}
+          ref={(ref) => {
+          listViewRef = ref;
+          }}/>
+    
     </View>
-
-    <View style={styles.actions}>
-    <Pressable onPress={() => {}} style={styles.actionButton}>
-    <TouchableOpacity
-     style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
-    //  onPress={() => setModalVisible(true)}
-    onPress={() =>
-{
-  //pass data to invest file
-  setCapital(item.buss_capital),
-  setbussID(item.buss_id),
-  setreceiverID(item.user_id),
-  HandlepopUp()
-}
-      }
->
-    <Text style={[styles.textStyle, { fontSize: textSize }]}>Navigate Invest</Text>
-   </TouchableOpacity>
-    </Pressable>
-
-    <Pressable onPress={() => {}} style={styles.actionButton}>
-    <TouchableOpacity
-     style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
-     onPress={() => {Notfication(item.user_id, item.buss_id)}}
-    >
-        <Text style={[styles.textStyle, { fontSize: textSize }]}>Notification Test</Text>
-   </TouchableOpacity>
-    </Pressable>
-
-
-    </View>
-
-
-
-    </TouchableOpacity>
-  )}
-  ref={(ref) => {
-    listViewRef = ref;
-  }}/>
-
-</View>
-
-  )}
-
-
-{/* //for pop up in investment */}
-{ visible ? <Invest data={[capital]} hidePopup={HandlepopUp}  />: ""}
-
-
-
-
-	  </SafeAreaView>
-	);
-  };
+          
+      )}
+    
+    
+    
+    
+    
+    
+        </SafeAreaView>
+      );
+      };
   
   const styles = StyleSheet.create({
 	itemStyle: {
@@ -578,10 +642,10 @@ onPress={() => {
         // width:"60%",
       },
       buttonOpen: {
-        backgroundColor: '#F194FF',
+        backgroundColor: "#534c88",
       },
       buttonClose: {
-        backgroundColor: '#2196F3',
+        backgroundColor: "#534c88",
       },
       textStyle: {
         color: 'white',
@@ -615,6 +679,23 @@ onPress={() => {
         color: 'white',
         fontSize: 16,
       },    
+
+      attendeesContainer: {
+        flexWrap:'wrap',
+        flexDirection: 'row',
+        paddingHorizontal: 10,
+      },
+    
+      attendeeImage: {
+        width: 30,
+        height: 30,
+        borderRadius: 20,
+        marginLeft: -10,
+        borderWidth:0.5,
+        marginTop:3,
+      },
+    
+
 
     
 });

@@ -1,7 +1,6 @@
 import Axios from "axios";
-import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Button, FlatList, StyleSheet, Text, View, ToastAndroid, Image, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import { Button, FlatList, Modal, StyleSheet, Text, View, ToastAndroid, Image, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import SelectDropdown from "react-native-select-dropdown";
 import {
@@ -15,7 +14,10 @@ import CalendarPicker from 'react-native-calendar-picker';
 import { AntDesign } from '@expo/vector-icons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from '@react-navigation/native';
-import {NETWORK_ADD} from '@env';
+import {NETWORK_ADDPOCKET} from '@env';
+import LoadingScreen from "./LoadingScreen";
+import { Feather } from '@expo/vector-icons';
+
 
 
 
@@ -24,7 +26,7 @@ export default function SignUpAccount() {
   const navigation = useNavigation();
   const [selecteduserType, setselecteduserType] = useState("");
   const [selectedgender, setselectedGender] = useState("");
-  const [userType, setuserType] = useState("");
+  const [userType, setuserType] = useState(0);
   const [firstName, setfirstName] = useState("");
   const [lastName, setlastName] = useState("");
   const [middleName, setmiddleName] = useState("");
@@ -39,12 +41,17 @@ export default function SignUpAccount() {
 
   const [createdAt, setCreatedAt] = useState("");
   const [updatedAt, setUpdatedAt] = useState("");
+  const [code, setCode] = useState("");
 
   const [name, setName] = useState("");
   const [data, setData] = useState();
+  const [btnVerifyStatus, setBtnVerifyStatus] = useState(true);
+  const [verify, setVerify] = useState(false);
+
+
 
   //ADDRESS
-  const [regionData, setRegionData] = useState([]);
+  const [generatedCode, setGeneratedCodes] = useState(0);
   const [provinceData, setProvince] = useState([]);
   const [cityData, setCity] = useState([]);
   const [barangayData, setBarangay] = useState([]);
@@ -53,6 +60,12 @@ export default function SignUpAccount() {
   const [selectedProvince, setselectedProvince] = useState("");
   const [selectedCity, setselectedCity] = useState("");
   const [selectedBrgy, setselectedBrgy] = useState("");
+  const [showloader, setShowLoarder] = useState(false);
+
+  const [showloaderModal, setShowLoarderModal] = useState(false);
+  const [showVerificationModal, setshowVerificationModal] = useState(false);
+  const [btnStatus, setBtnStatus] = useState(false);
+  const [userage, setUserAge ] = useState("")
 
   //for calendar bday picking
   const [bday, setBday] = useState("");
@@ -106,7 +119,7 @@ const handleSubmit = async () => {
 useEffect(() => {
   setTimeout(() => {
     setuserType([
-      {title: 'Entreprenuer'},
+      {title: 'Entrepreneur'},
       {title: 'Investor'},
     ]);
   }, 1000);
@@ -130,20 +143,15 @@ useEffect(() => {
 
         const user = (e) => {
         provinces(e.region_code).then((result) => setProvince(result));
-        // setProvince(e.region_code); use to get the region code so that the province will appear accordingly
-        //{"brgy_code": "072217053", "brgy_name": "Pardo (Pob.)", "province_code": "0722", "region_code": "07"} 47
     }
 
         const typeOfUser = (e) => {
           setselecteduserType(e.title);
-  
     }
 
     const typeOfGender = (e) => {
       setselectedGender(e.title);
-
-    
-}
+    }
 
 
 
@@ -152,42 +160,27 @@ useEffect(() => {
     const city = (e) => {
       setselectedProvince(e.province_name);
         cities(e.province_code).then((result) => setCity(result));
-        // setProvince(e.province_code);
-        // console.log(selectedProvince)
     }
 
     const brgy = (e) => {
       setselectedCity(e.city_name);
         barangays(e.city_code).then((result) => setBarangay(result));
-        // setProvince(e.city_code);
-        // console.log(selectedCity)
-
     }
 
     const brgyname = (e) => {
       setselectedBrgy(e.brgy_name);
       barangays(e.brgy_code).then((result) => setBarangayname(result));
-      // setProvince(e.city_code);
-      // console.log(selectedBrgy)
-
   }
 
 
 
-  // //to display data
-  // useEffect(() => {
-  //   fetch("http://192.168.8.171:19001/userss")
-  //     .then((res) => res.json())
-  //     .then((data) => setData(data))
-  //     .catch((error) => console.log(error));
-  // }, []);
+
 
   
 
   const Signup = () => {
-    // Axios.post("http://192.168.8.103:19001/signupFinal", {
-      Axios.post(`${NETWORK_ADD}:19001/signupFinal`, {
-
+    setShowLoarder(true);
+      Axios.post(`${NETWORK_ADDPOCKET}/signupFinal`, {
       userType: selecteduserType.toLowerCase(),
       firstName: firstName,
       lastName: lastName,
@@ -202,6 +195,7 @@ useEffect(() => {
       selectedCity: selectedCity,
       selectedBrgy: selectedBrgy,
       createdAt: getCurrentDate,
+      verify:verify
 
     })
       .then((res) =>  
@@ -215,23 +209,24 @@ useEffect(() => {
           ToastAndroid.SHORT,ToastAndroid.BOTTOM),
           navigation.navigate("Login")
 
+
         }
         else 
         {
 
-      switch(res.data.errorNum) {
-        //to test if the email already exist
-      case 1062:
-        ToastAndroid.show(
-          "email already exist!",
-          ToastAndroid.SHORT,ToastAndroid.BOTTOM)
-        // console.log(res.data.errorNum)
-        break;
+            switch(res.data.errorNum) {
+              //to test if the email already exist
+            case 1062:
+              ToastAndroid.show(
+                "email already exist!",
+                ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+                console.log(res.data.failed)
+              break;
+              }          
         }
-        // console.log(res.data.errorNum)
+        setShowLoarder(false);
+        setShowLoarderModal(false)
 
-          
-        }
       }
       )
       .catch((error) => console.log(error));
@@ -270,7 +265,9 @@ useEffect(() => {
           if (pass === confirmPassword) {
           // Passwords match, you can proceed with your logic here.
           setPasswordsMatch(true);
-          Signup();
+          setShowLoarderModal(true)
+
+          // Signup();
 
         }
         else {
@@ -330,6 +327,8 @@ useEffect(() => {
 
     if (phoneNumberPattern.test(sanitizedNumber)) {
       setIsValidNum(true);
+
+      
     } else {
       setIsValidNum(false);
     }
@@ -337,7 +336,6 @@ useEffect(() => {
     setcontactNum(sanitizedNumber);
   };
 
-const [userage, setUserAge ] = useState("")
   const calculateAge = (birthdate) => {
     const birthDate = new Date(birthdate);
     const today = new Date();
@@ -356,9 +354,166 @@ const [userage, setUserAge ] = useState("")
   };
   const handleSetAge = (birthdate) => {
     setUserAge(calculateAge(birthdate));
+    console.log(calculateAge(birthdate))
   };
 
 
+  // const handleSendPhoneVerfication = () => {
+
+  //   const min = 100000; // Minimum value for a 6-digit number
+  //   const max = 999999; // Maximum value for a 6-digit number
+  //   const randomCode = Math.floor(Math.random() * (max - min + 1)) + min;    
+  //   setGeneratedCodes(randomCode); // Update state with the generated code
+  // console.log(generatedCode)
+  
+  //   if (contactNum) {
+  //     Axios.post(`${NETWORK_ADDPOCKET}/sendCodeSms`, {
+  //       phonenum: contactNum,
+  //       generatedCode:generatedCode,
+  //     })
+  //       .then((res) => {
+  //         if (res.data.status) {
+  //           console.log(res.data.message);
+  //           ToastAndroid.show("code succesfully sent!",
+  //           ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+  //           showVerificationModal(true);
+
+  //           // handleShow();
+  //         } else {
+  //           ToastAndroid.show("error!",
+  //           ToastAndroid.SHORT,ToastAndroid.BOTTOM),
+  
+  //           console.log(res.data.message);
+  //           showVerificationModal(true);
+  //         }
+  //       })
+  //       .catch((error) => {
+  //         ToastAndroid.show("error!",
+  //         ToastAndroid.SHORT,ToastAndroid.BOTTOM),
+  
+  //         console.log(error.message);
+  //         showVerificationModal(true);
+  //       });
+  //   } else {
+  //     console.log("Wrong number");
+  //     showVerificationModal(true);
+  //   }
+  // };
+
+  const handleSendPhoneVerfication = () => {
+    const min = 100000; // Minimum value for a 6-digit number
+    const max = 999999; // Maximum value for a 6-digit number
+    const randomCode = Math.floor(Math.random() * (max - min + 1)) + min;
+    setGeneratedCodes(randomCode); // Update state with the generated code
+    console.log(randomCode);
+  
+    if (contactNum) {
+      Axios.post(`${NETWORK_ADDPOCKET}/sendCodeSms`, {
+        phonenum: contactNum,
+        generatedCode: randomCode,
+      })
+        .then((res) => {
+          if (res.data.status) {
+            console.log(res.data.message);
+            ToastAndroid.show("Code successfully sent!", ToastAndroid.SHORT);
+            setshowVerificationModal(true);
+
+           // showVerificationModal(true);
+          } else {
+            ToastAndroid.show("Error!", ToastAndroid.SHORT);
+            console.log(res.data.message);
+            setshowVerificationModal(true);
+          }
+        })
+        .catch((error) => {
+          ToastAndroid.show("Error!", ToastAndroid.SHORT);
+          console.log(error.message);
+         setshowVerificationModal(true);
+        });
+    } else {
+      console.log("Wrong number");
+      setshowVerificationModal(true);
+    }
+  };
+  
+
+  const CheckCode = () => {
+
+    if (parseInt(generatedCode) === parseInt(code)) {
+      setBtnVerifyStatus(false);
+      setshowVerificationModal(false)
+      setVerify(true)
+
+    } 
+    
+    else{
+      ToastAndroid.show("wrong code!",
+      ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+      setCode("")
+    }
+  };
+
+
+  const formatPhoneNumber = (input) => {
+    // Remove all non-numeric characters
+    const cleaned = input.replace(/\D/g, '');
+
+    // const phoneNumberPattern = /^(09|\+639)\d{9}$|^(02|\(02\)|\+632|\(032\)|\+6332)\d{7}$/;
+    // const phoneNumberPattern = /^\+639\d{9}$/;
+
+
+    // if (phoneNumberPattern.test(cleaned)) {
+    //   setIsValidNum(true);
+
+      
+    // } else {
+    //   setIsValidNum(false);
+    // }
+
+
+    // Check if the number doesn't exceed 12 characters
+    if (cleaned.length <= 12) {
+      // Add the country code if the number doesn't already start with it
+      if (!cleaned.startsWith('639') && !cleaned.startsWith('+639')) {
+        setcontactNum('+639' + cleaned);
+        // setIsValidNum(true);
+
+      } else {
+        setcontactNum('+' + cleaned);
+        // setIsValidNum(false);
+      }
+    }
+  };
+
+
+  const loginCheckNum = () => {
+    // setShowLoarder(true);
+  
+    Axios.post(
+      `${NETWORK_ADDPOCKET}/contactConfirm`,
+      {
+        phonenum: contactNum,
+      })
+      .then((res) => {
+        if (res.data.success) {
+         
+          console.log("hello")
+          handleSendPhoneVerfication();
+        } 
+        
+        else {
+          ToastAndroid.show(
+            "contact number already in use!",
+            ToastAndroid.SHORT,ToastAndroid.BOTTOM)
+        }
+  
+      })
+      .catch((error) => {
+        console.log(error.message);
+        // setBtnStatus(false);
+      });
+  };
+  
 
   return (
 
@@ -493,6 +648,25 @@ const [userage, setUserAge ] = useState("")
 </View>
 
 
+<Text style={{fontSize:14,paddingRight: "59%",}}>
+
+       Age</Text>
+         <View style={styles.inputContainer}>
+         <TextInput
+           style={styles.input1}
+           placeholder="Age"
+           onChangeText={(text) => setUserAge(text)}
+           value={userage.toString()}
+
+
+           editable= {false}
+           
+         />
+   
+       </View>
+
+
+
        <Text style={{fontSize:14,paddingRight: "59%",}}>
        {!contactNum  && (
         <Text style={{color: 'red'}}>*</Text>
@@ -501,9 +675,9 @@ const [userage, setUserAge ] = useState("")
        Contact Number</Text>
          <View style={styles.inputContainer}>
          <TextInput
-           style={[styles.input1, !isValid && styles.inputError]}
+           style={[styles.inputNum, !isValid && styles.inputError]}
            placeholder="Contact Number"
-        // onChangeText={(text) => setcontactNum(text)}
+        // onChangeText={(text) => formatPhoneNumber(text)}
         keyboardType="numeric"
         onChangeText={validatePhoneNumber}
         value={contactNum}
@@ -514,6 +688,17 @@ const [userage, setUserAge ] = useState("")
        {!isValidNum && (
         <Text style={{color: 'red'}}>Invalid contact number</Text>
       )}
+
+      {/* {btnVerifyStatus ?(
+        <TouchableOpacity style={styles.confirm}  onPress={() => loginCheckNum()} >
+        <Text style={{ color:'#ffffff' }}>Verify</Text> 
+      </TouchableOpacity> 
+
+      ):(
+        <Text style={{color: 'blue'}}>verified</Text>
+      )} */}
+
+
 
 
 
@@ -564,8 +749,6 @@ const [userage, setUserAge ] = useState("")
         defaultButtonText={'Select city'}
         onSelect={(selectedItem, index) => {
             brgy(selectedItem);
-
-        //   console.log(selectedItem, index);
 
         }}
         buttonTextAfterSelection={(selectedItem, index) => {
@@ -644,14 +827,8 @@ const [userage, setUserAge ] = useState("")
                 return <FontAwesome name={isOpened ? 'chevron-up' : 'chevron-down'} color={'#444'} size={12} />;
               }}
               dropdownIconPosition={'right'}
-            //   dropdownStyle={styles.dropdown1DropdownStyle}
-            //   rowStyle={styles.dropdown1RowStyle}
               rowTextStyle={{fontSize:14, }}
             />
-
-   
-       {/* </View> */}
-
 
        <Text style={{fontSize:14,paddingRight: "59%",}}>
        {!email  && (
@@ -681,13 +858,11 @@ const [userage, setUserAge ] = useState("")
          <TextInput
            style={styles.inputbday}
            secureTextEntry={secureTextEntry}
-          //  onChangeText={text => setPass(text)}
           onChangeText={validatePassword}
              placeholder="Password"
              value={pass}
          />
          <TouchableOpacity
-         //  style={{marginLeft: "65%",}}
            title={secureTextEntry ? 'Show Password' : 'Hide Password'}
            onPress={togglePasswordVisibility}
          >
@@ -730,37 +905,196 @@ const [userage, setUserAge ] = useState("")
         <Text style={{ color: 'red',paddingRight: "40%" }}>Passwords do not match</Text>
       )}
 
-
-
-
-
-       
-
-
-
-
-
-
-
-
-
-
-
-
-
    
-   
-         
-      <TouchableOpacity style={styles.button}  onPress={() => handleValidation()} >
+      {showloader ? (
+        <TouchableOpacity style={styles.button} >
+      <LoadingScreen />
+
+      </TouchableOpacity> 
+        ) : (
+
+
+          <TouchableOpacity style={styles.button} 
+          // disabled={btnVerifyStatus}  
+          onPress={() => handleValidation()} >
         <Text style={{ color:'#ffffff' }}>Create </Text> 
       </TouchableOpacity> 
-        
-   
-         
-       
-   
-       
+      
+      
+          
+          )}
+
          </ScrollView>
+
+
+
+         {showloaderModal ? (
+        <Modal
+            animationType="slide"
+            transparent={true}
+          >
+            <View style={styles.modalView1}>
+            <ScrollView>
+    
+    
+        <Text style={{ fontSize: 20, textAlign: 'center', fontWeight: 'bold', marginBottom: 20 }}>
+        AGREEMENT TO TERMS
+        </Text>           
+        
+        <Text style={styles.name}>
+        These Terms and Conditions Constitute a legally binding agreement
+            made between you, whether personally or on behalf of an entity
+            (“you”) and BiaS (“we”, “us”, “our”), concerning your access to and
+            use BiaS website as well as any other media form, media channel,
+            mobile website or mobile application related, linked, or otherwise
+            connected there to (collectively, the “BiaS”). You agree that by
+            accessing the app and site, you have read, understood and agree to
+            be bound by all of these terms and condition, if you do not agree
+            with all these terms and condition, then you are expressly
+            prohibited from using the app or Site and you must discontinue use
+            immediately.         </Text>
+
+         <Text style={styles.name}>
+         Terms and Conditions for BiaS        
+         </Text>
+         <Text style={styles.name}>
+         Please read these terms and conditions carefully before using BiaS
+            operated by BiaS.        </Text>
+         <Text style={styles.name}>
+         1. Acceptance of Terms By accessing or using BiaS, you agree to
+            comply with and be bound by these terms and conditions. If you do
+            not agree to these terms, please do not use the app.{" "}         </Text>
+         <Text style={styles.name}>
+         2. Changes to Terms BiaS reserves the right to update or modify
+            these terms at any time without prior notice. Your continued use of
+            the app after any changes constitutes acceptance of the new terms
+
+          </Text>
+          <Text style={styles.name}>
+          3. Use of the App:{" "}
+          </Text>
+          <Text style={styles.name}>
+          a. BiaS is provided for your personal and non-commercial use only.         </Text>
+          <Text style={styles.name}>
+          b. You may not use the app for any illegal or unauthorized
+              purpose. You agree to comply with all laws and regulations
+              applicable to your use of the app.
+            </Text>
+            <Text style={styles.name}>
+            c. You are responsible for maintaining the confidentiality of your
+              account information and for all activities that occur under your
+              account.           </Text>
+            <Text style={styles.name}>
+            4. Privacy Policy Your use of BiaS is also governed by our Privacy
+            Policy, which can be found at . Please review the Privacy Policy to
+            understand how we collect, use, and disclose information.           </Text>
+            <Text style={styles.name}>
+            5. Intellectual Property:{" "}              </Text>
+              <Text style={styles.name}>
+              a. All content and materials available on [Your Business] are the
+              property of BiaS and are protected by intellectual property laws.
+              </Text>
+              <Text style={styles.name}>
+              b. You may not reproduce, distribute, modify, or create derivative
+              works from any content without express written consent from BiaS.             </Text>
+
+              <Text style={styles.name}>
+              6. User-Generated Content:
+              </Text>
+
+              <Text style={styles.name}>
+              a. Users may submit content to BiaS. By submitting content, you
+                grant a non-exclusive, worldwide, royalty-free license to use,
+                reproduce, modify, and distribute the content.{" "}              </Text>
+
+              <Text style={styles.name}>
+              b. BiaS reserves the right to remove any content that violates
+                these terms or is otherwise objectionable.{" "}             </Text>
+              <Text style={styles.name}>
+              8. Limitation of Liability: To the extent permitted by law, BiaS
+              shall not be liable for any indirect, incidental, special,
+              consequential, or punitive damages, or any loss of profits or
+              revenues, whether incurred directly or indirectly.{" "}           </Text>
+
+              <Text style={styles.name}>
+              9. Governing Law These terms are governed by and construed in
+              accordance with the laws of [Your Jurisdiction], without regard to
+              its conflict of law principles.{" "}          </Text>
+
+              <Text style={styles.name}>
+              Contact Information If you have any questions about these terms,
+              please contact us at biascapstone@gmail.com. By using BiaS,
+              you agree to these terms and conditions.          </Text>
+
+
+        <TouchableOpacity style={styles.button}  onPress={() => 
+        Signup() 
+        // setShowLoarderModal(false)
+        } >
+        <Text style={{ color:'#ffffff' }}>Agree </Text> 
+      </TouchableOpacity> 
+
+</ScrollView>
+
+
+
+    
+              
+            </View>
+          </Modal>
+          ) : (
+            ""
+          )}
+
+          <>
+{showVerificationModal ? (
+    <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showVerificationModal}
+        // onRequestClose={() => setModalVisiblee(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalViewVer}>
+          <TouchableOpacity
+      style={styles.closeButton}
+      onPress={() => setshowVerificationModal(false)}
+    >
+      <Feather name="x-circle" size={24} color="black" />
+    </TouchableOpacity>
+
+
+       <Text style={styles.label}>Enter Verification Code</Text>
+      <View style={styles.codeContainer}>
+
+      <TextInput
+        style={styles.inputVer}
+        placeholder="Enter Code"
+        onChangeText={(text) => setCode(text)}
+        value={code}
+        keyboardType="numeric"
+
+      />
+
+    </View>
+
+      <TouchableOpacity style={styles.buttonCode} onPress={() => CheckCode()}>
+        <Text style={{ color: '#ffffff' }}>Send Code</Text>
+      </TouchableOpacity>
+
+
+          </View>
+        </View>
+      </Modal>
+      ) : (
+        ""
+      )}
+
+</>
+
+
+
+
          </View>
    
   );
@@ -782,6 +1116,17 @@ const styles = StyleSheet.create({
     marginTop: 15,
     backgroundColor: "#534c88",
   },
+
+  confirm: {
+    width: "100%",
+    borderRadius: 10,
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 15,
+    backgroundColor: "#534c88",
+  },
+
   buttonn: {
     height: 40,
     width: 280,
@@ -886,6 +1231,13 @@ const styles = StyleSheet.create({
     width:"80%",
   },
 
+  inputNum: {
+    // flex: 1,
+    height: 45,
+    width:"50%",
+  },
+
+
   inputbday: {
     // flex: 1,
     height: 45,
@@ -917,5 +1269,94 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: 'red',
   },
+
+  modalView1: {
+    height:"90%",
+    width:"95%",
+    margin: 10,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+
+  modalViewVer: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 14,
+    right: 20,
+    zIndex: 1, // Ensure it's above the modal content
+  },
+
+  label: {
+    fontSize: 18,
+    marginBottom: 10,
+  },
+
+  codeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingLeft: 10,
+    marginBottom: 15,
+    backgroundColor: "white",
+    borderRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 1,
+    borderWidth: 1,
+
+  },
+  inputVer: {
+    // flex: 1,
+    height: 45,
+    width:"75%",
+  },
+  focusedInput: {
+    borderColor: "#534c88", // Change this to the color you want on focus
+  },
+
+  buttonCode: {
+    width: 200,
+    borderRadius: 10,
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 15,
+    backgroundColor: "#534c88",
+  },
+
 
 });

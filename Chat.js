@@ -1,144 +1,154 @@
-import React, { useState } from 'react'
+import React, { useState,useEffect, useRef } from 'react'
 import {
   StyleSheet,
   Text,
   View,
-  Image,
   TextInput,
-  FlatList,
   Dimensions,
-  KeyboardAvoidingView,
+  TouchableOpacity,
+  ScrollView,
 } from 'react-native'
+import Axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const { width, height } = Dimensions.get('window')
+import {NETWORK_ADDPOCKET} from '@env';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; 
+import LoadingScreen from "./LoadingScreen";
+
 export default Chat = () => {
-  const messagesData = [
-    {
-      id: 1,
-      sent: true,
-      msg: 'Lorem ipsum dolor',
-      image: 'https://www.bootdey.com/img/Content/avatar/avatar1.png',
-    },
-    {
-      id: 2,
-      sent: true,
-      msg: 'sit amet, consectetuer',
-      image: 'https://www.bootdey.com/img/Content/avatar/avatar1.png',
-    },
-    {
-      id: 3,
-      sent: false,
-      msg: 'adipiscing elit. Aenean ',
-      image: 'https://www.bootdey.com/img/Content/avatar/avatar6.png',
-    },
-    {
-      id: 4,
-      sent: true,
-      msg: 'commodo ligula eget dolor.',
-      image: 'https://www.bootdey.com/img/Content/avatar/avatar1.png',
-    },
-    {
-      id: 5,
-      sent: false,
-      msg: 'Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes',
-      image: 'https://www.bootdey.com/img/Content/avatar/avatar6.png',
-    },
-    {
-      id: 6,
-      sent: true,
-      msg: 'nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo',
-      image: 'https://www.bootdey.com/img/Content/avatar/avatar1.png',
-    },
-    {
-      id: 7,
-      sent: false,
-      msg: 'rhoncus ut, imperdiet',
-      image: 'https://www.bootdey.com/img/Content/avatar/avatar6.png',
-    },
-    {
-      id: 8,
-      sent: false,
-      msg: 'a, venenatis vitae',
-      image: 'https://www.bootdey.com/img/Content/avatar/avatar6.png',
-    },
-  ]
-  const [messages, setMessages] = useState(messagesData)
-  const [newMessage, setNewMessage] = useState('')
+  const[user, setUser] = useState('');
+  const [message, setMessage] = useState("");
+  const [listmessages, setListMessages] = useState([]);
+  const chatContainer = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const reply = () => {
-    var messagesList = messages
-    messagesList.push({
-      id: Math.floor(Math.random() * 99999999999999999 + 1),
-      sent: false,
-      msg: newMessage,
-      image: 'https://www.bootdey.com/img/Content/avatar/avatar6.png',
-    })
-    setNewMessage('')
-    setMessages(messagesList)
-  }
 
-  const send = () => {
-    if (newMessage.length > 0) {
-      let messagesList = messages
-      messagesList.push({
-        id: Math.floor(Math.random() * 99999999999999999 + 1),
-        sent: true,
-        msg: newMessage,
-        image: 'https://www.bootdey.com/img/Content/avatar/avatar1.png',
-      })
-      setMessages(messagesList)
-      setTimeout(() => {
-        reply()
-      }, 2000)
-    }
-  }
+  setTimeout(() => {
+    setIsLoading(false); // Set isLoading to false when data is loaded
+  }, 5000); // Simulate a 5-second loading time
 
-  const renderItem = ({ item }) => {
-    if (item.sent === false) {
-      return (
-        <View style={styles.eachMsg}>
-          <Image source={require("./assets/prrofilee.png")} style={styles.userPic} />
-          <View style={styles.msgBlock}>
-            <Text style={styles.msgTxt}>{item.msg}</Text>
-          </View>
-        </View>
-      )
-    } else {
-      return (
-        <View style={styles.rightMsg}>
-          <View style={styles.rightBlock}>
-            <Text style={styles.rightTxt}>{item.msg}</Text>
-          </View>
-          <Image source={require("./assets/profilee.png")} style={styles.userPic} />
-        </View>
-      )
-    }
-  }
+  const findUser = async () => {
+    const result = await AsyncStorage.getItem('userID');
+      //console.log(result);
+      if(!result){
+        navigation.navigate("Login")
+      }
+   return (result)
+    };
+   
+
+  
+    const fetchMessage = async() => {
+      Axios.post(`${NETWORK_ADDPOCKET}/getchtmsg`,{
+        adminId: 10,
+        user_id:await findUser(),
+        })
+        .then((res) => {
+          setListMessages(res.data.result);
+        });
+    };
+    
+    useEffect(() => {
+      fetchMessage();
+      const invtervalsend = setInterval(fetchMessage, 2000);
+      return () => clearInterval(invtervalsend);
+    }, []);
+
+
+    const handleSendMessage = async() => {
+   console.log("click")
+      Axios.post(`${NETWORK_ADDPOCKET}/chatRoom`,{
+          adminId: 10,
+          user:await findUser(),
+          content: message,
+          senderId: await findUser(),
+        })
+        .then((res) => {
+          if (res.data.status) {
+            setMessage("");
+            console.log("Send")
+          } else {
+            console.log(res.data.message);
+          }
+        })
+        .catch((error) => {
+          console.log(error.message);
+        });
+    };
+      
+  
+
 
   return (
-    <View style={{ flex: 1 }}>
-      <KeyboardAvoidingView  style={styles.keyboard}>
-        <FlatList
-          style={styles.list}
-          extraData={messages}
-          data={messages}
-          keyExtractor={item => {
-            return item.id
-          }}
-          renderItem={renderItem}
+    <>
+    {isLoading ? (
+    
+    <LoadingScreen />
+    ):(
+
+    <View  style={{ height: "92%",}}>
+
+      <ScrollView
+        style={styles.chatContainer}
+        contentContainerStyle={styles.chatContent}
+        ref={chatContainer}>
+
+        {listmessages ? (
+          listmessages.map((item) => (
+            <View
+              style={[
+                styles.messageContainer,
+                {
+                  justifyContent:
+                    item.chtmsg_sender_id !== 10
+                      ? 'flex-end'
+                      : 'flex-start',
+                },
+              ]}
+              key={item.chtmsg_id}>
+              
+              <Text
+                style={[
+                  styles.messageText,
+                  {
+                    backgroundColor:
+                      item.chtmsg_sender_id !== 10
+                        ? '#007bff'
+                        : '#d8d8d8',
+                    color:
+                      item.chtmsg_sender_id !==10
+                        ? '#ffffff'
+                        : '#000000',
+                  },
+                ]}
+              >
+                {item.chtmsg_content}
+              </Text>
+            </View>
+          ))
+        ) : (
+          <Text></Text>
+        )}
+      </ScrollView>
+
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Message"
+          onChangeText={(text) => setMessage(text)}
+          value={message}
+          onSubmitEditing={handleSendMessage}
         />
-        <View style={styles.input}>
-          <TextInput
-            style={{ flex: 1 }}
-            placeholderTextColor="#696969"
-            onChangeText={msg => setNewMessage(msg)}
-            blurOnSubmit={false}
-            onSubmitEditing={() => send()}
-            placeholder="Type a message"
-            returnKeyType="send"
-          />
-        </View>
-      </KeyboardAvoidingView>
+        <TouchableOpacity  onPress={handleSendMessage}>
+        <MaterialCommunityIcons name="send" size={30} color="black" />
+        </TouchableOpacity>
+        {/* <Button title="Send" onPress={handleSendMessage} /> */}
+      </View>
+
+
     </View>
+    )}
+    </>
   )
 }
 
@@ -187,6 +197,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     margin: 10,
+    marginBottom:70,
     shadowColor: '#3d3d3d',
     shadowRadius: 2,
     shadowOpacity: 0.5,
@@ -247,5 +258,61 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#202020',
     fontWeight: '600',
+  },
+  messageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  message: {
+    padding: 10,
+    borderRadius: 10,
+    maxWidth: '80%', // Adjust the width as needed
+  },
+
+  container: {
+    padding: 8,
+    marginTop: 20,
+    paddingTop: 10,
+    height: 544, // Convert "34rem" to equivalent height in React Native
+  },
+  label: {
+    fontWeight: 'bold',
+    backgroundColor: '#534c88',
+    padding: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  chatContainer: {
+    borderRadius: 8,
+    height: 400.4, // Convert "26.4rem" to equivalent height in React Native
+  },
+  chatContent: {
+    padding: 12,
+    flexGrow: 1,
+  },
+  messageContainer: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  messageText: {
+    padding: 8,
+    borderRadius: 8,
+    maxWidth: '30%', // Adjust the width as required
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    // paddingHorizontal: 12,
+    // paddingVertical: 8,
+  },
+  input: {
+    flex: 1,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#6c757d',
+    borderRadius: 8,
+    padding: 8,
   },
 })

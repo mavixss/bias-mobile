@@ -2,61 +2,40 @@ import {
 	SafeAreaView,
 	StyleSheet,
 	View,
-	FlatList,
 	Text,
 	TouchableOpacity,
 	Image,
-	Button,
-	Alert,
-	Avatar,
-	TextInput,
-	handleSearchTextChange,
-	searchText,
-	ToastAndroid,
-  RefreshControl,
-	props,
   Pressable,
-  Dimensions
+  Dimensions,
+  ScrollView
   } from "react-native";
-  import { AntDesign, Ionicons   } from '@expo/vector-icons';
   import Axios from 'axios';
   import AsyncStorage from "@react-native-async-storage/async-storage";
   import { useRoute } from '@react-navigation/native';
   import React, { useEffect, useState } from "react";
   import { useNavigation } from "@react-navigation/native";
-  import { StatusBar } from "expo-status-bar";
-  import Upload from "./Upload";
-  import { Modal } from "react-native-paper";
-  import Invest from "./Invest";
   import LoadingScreen from "./LoadingScreen";
-  import { CommonActions } from '@react-navigation/native';
-  import {NETWORK_ADD} from '@env';
+  import {NETWORK_ADDPOCKET} from '@env';
+
 
 
   
-const Search = () => {
-const route = useRoute();
-const networkAdd = NETWORK_ADD;
-// console.log(networkAdd)
+const BussinessViewEntrep = () => {
 
-const [modalVisible, setModalVisible] = useState(false);
+const route = useRoute();
+const id = route.params.id; //from feeds
 const [visible, setVisible] = useState(false);
 const [capital, setCapital] = useState();
 const [receiverID, setreceiverID] = useState();
 const [bussID, setbussID] = useState();
-const [addrss, setAddrss] = useState();
-const [date, setDate] = useState();
 const navigation = useNavigation();
 const [newsfeedsData, setnewsfeedsData] = useState([]);
-const [buttonStatus, setbuttonStatus] = useState(true);
-const [useSearch, setSearch] = useState("");
 
 
 //for loading screen
 const [isLoading, setIsLoading] = useState(true);
 
 //////////////// created
- 
 var datee = new Date().getDate();
 var month = new Date().getMonth() + 1;
 var year = new Date().getFullYear();
@@ -91,56 +70,10 @@ const formatDate = (date) => {
 
 
 
-useEffect(() => {
-  // Axios.get("http://192.168.254.127:19001/getInvestorsFeedsFinal")
-    Axios.get(`${networkAdd}:19001/getInvestorsFeedsFinal`)
-    .then((res) => {
-      
-      if (res.data.success) {
-      setnewsfeedsData(res.data.result)
-      const initialData = res.data.filterData;
-
-      const data = initialData.filter((item) => {
-        if (item.buss_capital !== calculateTotalInvest(item.investments)) {
-          return item;
-        }
-      });
-
-
-      }
-      else {
-          console.log(res.data.error);
-        }
-    }) 
-  .catch((error) => console.log(error))
-  },[newsfeedsData]);
-
-
-
-useEffect(() => {
   // Simulate an API call or data loading process
   setTimeout(() => {
     setIsLoading(false); // Set isLoading to false when data is loaded
-  }, 2000); // Simulate a 2-second loading time
-}, []);
-
-
-
-  const [results, setResults] = useState([]);
-
-
-  const handleSearch = async () => {
-    try {
-      const response = await Axios.get(
-        // `http://192.168.8.103:19001/search?useSearch=${useSearch}`
-        `${NETWORK_ADD}:19001/search?useSearch=${useSearch}`
-
-      );
-      setResults(response.data);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
+  }, 5000); // Simulate a 2-second loading time
 
 
 
@@ -152,52 +85,22 @@ useEffect(() => {
   useEffect(() => {
   async function fecthUser(){
     const id = await AsyncStorage.getItem('userID');
-    // console.log(id);
     setUser(id)
-
-    // Axios.post("http://192.168.8.103:19001/getIdFinal",{
-      Axios.post(`${NETWORK_ADD}:19001/getIdFinal`,{
-
+      Axios.post(`${NETWORK_ADDPOCKET}/getIdFinal`,{
         user:id
       })
-        // .then((res) => setData(res.data.results[0]))
         .then((res) => {setData(res.data.results[0].user_fname)
         console.log(res.data.results[0].user_fname)}
         )
-
-        //  .then((data) => setData(data)
         .catch((error) => console.log(error));
     if(!id){
       navigation.navigate("Login")
-
     }
    }
 
    fecthUser();
   },[])
 
-
-
-  const Notfication = (findBussinessUser, findBussinessID) => {
-    
-    // Axios.post("http://192.168.8.103:19001/notif", {
-      Axios.post(`${NETWORK_ADD}:19001/notif`, {
-
-      notifMsg: notifMsg,
-      user:user,
-      createdAt:createdAt,
-      findBussinessUser: findBussinessUser,
-     findBussinessID: findBussinessID,
-
-
-    })
-      .then((res) =>  
-        ToastAndroid.show("Investment sucessfully requested.",
-        ToastAndroid.SHORT,ToastAndroid.BOTTOM),
-      )
-      .catch((error) => console.log(error));
-      
-  };
 
 
   const HandlepopUp =() =>{
@@ -218,27 +121,8 @@ useEffect(() => {
     }
   }
 
-
-  //computing sum
-
-  const calculateTotalInvest = (investment) => {
-    if (Array.isArray(investment)) {
-      const investDetails = investment.map((item) => item.invest_amount);
-  
-      let totalSum = 0;
-  
-      for (let i = 0; i < investDetails.length; i++) {
-        totalSum += parseFloat(investDetails[i]);
-      }
-  
-      return totalSum;
-    } else {
-      return 0;
-    }
-  };
-  
-
   const handleAbbreviatedValue = (value) => {
+
     if (value >= 1000000000) {
       return (value / 1000000000).toFixed(1) + "B";
     }
@@ -253,29 +137,27 @@ useEffect(() => {
   };
 
 
+    //computing sum
 
-//for drag to refresh
-const [refreshing, setRefreshing] = useState(false);
+    const calculateTotalInvest = (investment) => {
+      if (Array.isArray(investment)) {
+        const investDetails = investment.map((item) => item.invest_amount);
+    
+        let totalSum = 0;
+    
+        for (let i = 0; i < investDetails.length; i++) {
+          totalSum += parseFloat(investDetails[i]);
+        }
+    
+        return totalSum;
+      } else {
+        return 0;
+      }
+    };
+  
 
 
-useEffect(() => {
-  // Fetch your initial data here
-  fetchData();
-}, []);
 
-const fetchData = () => {
-  // Simulate fetching data
-  setTimeout(() => {
-    const newData = [...newsfeedsData, { key: Date.now().toString() }];
-    setnewsfeedsData(newData);
-    setRefreshing(false);
-  }, 1000);
-};
-
-const handleRefresh = () => {
-  setRefreshing(true);
-  fetchData();
-};
 
 
   // Get the screen dimensions
@@ -287,6 +169,20 @@ const handleRefresh = () => {
   const textSize = Math.min(width, height) * 0.036;
 
 
+  useEffect(() => {
+      Axios.post(`${NETWORK_ADDPOCKET}/ViewBussinessEntrep`,{
+        bussID:id
+    })
+      // .then((res) => setData(res.data.results[0]))
+      .then((res) => setnewsfeedsData(res.data.result)
+      )
+  
+      //  .then((data) => setData(data)
+      .catch((error) => console.log(error));
+  
+  }, [newsfeedsData]);
+
+//for duplication
   const renderUniqueInvestors = (investments = []) => {
     const uniqueInvestors = new Map();
     const uniqueInvestorProfiles = [];
@@ -301,110 +197,42 @@ const handleRefresh = () => {
     return uniqueInvestorProfiles;
   };
 
+
+
+
+
+
+
+
+
+
+
 	return (
-	  <SafeAreaView style={{ flex: 1, height: "100%", marginTop:"5%" }}>
-
-        {/* <View style={styles.searchContainer}>
-        <TouchableOpacity style={styles.button}  
-       onPress={() => navigation.navigate('Upload')}
-        >
-        <Text style={{ color:'#ffffff' }}>Pitch Business</Text> 
-      </TouchableOpacity> 
-      
-        </View> */}
-
-
-  <View style={{flexDirection:'row'}}>
-
-      <View style={styles.searchContainer}>
-      <TextInput
-          style={styles.searchInput}
-          onChangeText={text => setSearch(text)}
-          placeholder="Search post.."
-          value={useSearch}
-          onSubmitEditing={handleSearch}
-
-        />
-      </View>
-      <TouchableOpacity
-      style={{marginTop:"3%"}}
-          onPress={() => {
-          navigation.navigate('Chats');
-        }}
-      >
-      <Ionicons  name="ios-chatbubble-outline" size={42} color="grey" />
-      </TouchableOpacity>
-
-      {/* <Button style={{marginTop:"3%"}} title="Search" onPress={handleSearch} /> */}
-
-</View>
-
+	  <SafeAreaView style={{ flex: 1, height: "100%", marginTop:"2%" }}>
 
 {isLoading ? (
 
 <LoadingScreen />
 ):(
+  <ScrollView>
 
-//height for flatlist
   <View style={{maxHeight:"86%"}}>
+  {newsfeedsData.map((item, index) => (
 
-		<FlatList
-		 ListEmptyComponent={
-			<View >
-				<Text style={styles.emptyListStyle}>
-					NO DATA FOUND
-				</Text>
-			</View>}
-
-  //     ListHeaderComponent={
-  // <View style={styles.searchContainer}>
-  //       <TouchableOpacity style={styles.button}  
-  //      onPress={() => navigation.navigate('Upload')}
-  //       >
-  //       <Text style={{ color:'#ffffff' }}>Pitch Business</Text> 
-  //     </TouchableOpacity> 
-      
-  //       </View> 
-
-  //     }
-
-		  data={results.length > 0 ? results : newsfeedsData}
-		  keyExtractor={(item, index) => index.toString()}
-      //for drag to refresh
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-        />
-      }
-		  renderItem={({ item }) => (
-			<TouchableOpacity style={styles.post}
-      //to view business
-      onPress={() => {
-          navigation.navigate('BusinessView', { id: item.buss_id });
-        }}
-
-      >
+			<View  key={index} style={styles.post}>
 
               <View style={styles.header}>
-              <TouchableOpacity
-      //to view profile
-      onPress={() => {
-          // navigation.navigate('ProfileView', { id: item.user_id });
-          navigation.navigate('ProfileViewFeeds', { id: item.user_id });
-        }}
-              
-              >
                 <Image
                   style={styles.avatar}
-                  source={item.user_profile ? { uri: item.user_profile } : require("./assets/prrofilee.png")} 
+                  source={item.user_profile ? { uri: item.user_profile } : require("./assets/prrofilee.png")}
                 />
-                </TouchableOpacity>
                 <View>
-            <Text style={styles.name}> {item.user_id} {item.user_fname} {item.user_lname}
+            <Text style={styles.name}>{item.user_fname} {item.user_lname}
 			{/* {item.name} */}
 			</Text>
               <Text style={styles.date}>{formatDate(item.buss_created_at)}</Text>
+              <Text style={styles.date}>{item.buss_name}</Text>
+
               <Text style={styles.date}>{item.buss_address}</Text>
 
               </View>
@@ -416,17 +244,10 @@ const handleRefresh = () => {
            </View>
 
               </View>
-
-
-              <Text style={styles.description}> Business Name: {item.buss_name} {item.buss_type_name}</Text>
-
-              <Text style={styles.description}> {item.buss_summary}</Text>
-              <Text style={styles.description}> {item.buss_target_audience}</Text>
+              <Text style={styles.description}>{item.buss_summary}</Text>
 
               <Image style={{ height: 320, width: '100%' }}  source={{uri: item.buss_photo}} />
-            
-            
-            <View style={styles.actions}>
+              <View style={styles.actions}>
         
         <View style={styles.attendeesContainer}>
            {renderUniqueInvestors(item.investments).map((investment, index) => (
@@ -448,13 +269,51 @@ const handleRefresh = () => {
 
 
             </View>
-              
+
+            <View style={styles.header}>
+           <View>
+              <Text style={{fontSize:20, paddingBottom:"2%", fontWeight:"500"}}>Business Overview</Text>
+
+              <Text style={styles.name}>Business Name: {item.buss_name} </Text>
+              <Text style={styles.date}>Type: {item.buss_type}</Text>
+              <Text style={styles.date}>Address: {item.buss_address}</Text>
+
+
+              <Text style={styles.date}>Business Experience: {item.buss_prev_name ? item.buss_prev_name: 'None'}</Text>
+              <Text style={styles.date}>Business Target Audience: {item.buss_target_audience}</Text>
+              <Text style={styles.date}>List of Funds</Text>
+
+              {JSON.parse(item.buss_useof_funds).map((funds, index) => (
+                <View style={styles.actionFunds} key={index}>
+                <Text style={styles.date}>Product {index+1}</Text>
+              <Text style={styles.date}>{funds.product}</Text>
+              <Text style={styles.date}>{funds.amount}</Text>
+
+              </View>
+              ))}
+
+              <Text style={styles.date}>Funds Total: {item.buss_capital} </Text>
+           </View>
+          </View>
             
             <View style={styles.actions}>
-
-
                 <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
-              <Text style={styles.actionText}>Remaining:</Text>
+              <Text style={styles.actionText}>Status:</Text>
+              <Text style={styles.actionCount}>{item.buss_status}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
+              <Text style={styles.actionText}>Capital:</Text>
+              <Text style={styles.actionCount}>{item.buss_capital}</Text>
+            </TouchableOpacity>
+            </View>
+
+            <View style={styles.actions}>
+            
+            {isNaN(item.buss_capital - calculateTotalInvest(item.investments)) ? (
+            null
+            ):(
+            <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
+              <Text style={styles.actionText}>Remains:</Text>
               <Text style={styles.actionCount}>
               {handleAbbreviatedValue(
                             parseFloat(
@@ -463,60 +322,109 @@ const handleRefresh = () => {
                             )
                           )}              
               </Text>
-            </TouchableOpacity>
-            <View onPress={() => {}} style={styles.actionButton}>
-              <Text style={styles.actionText}>Capital:</Text>
-              <Text style={styles.actionCount}>{handleAbbreviatedValue(item.buss_capital)}</Text>
-            </View>
+              </TouchableOpacity>
+              )}
             </View>
 
 
+                {/* timeline */}
             {/* <View style={styles.actions}>
             <Pressable onPress={() => {}} style={styles.actionButton}>
             <TouchableOpacity
              style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
-            //  onPress={() => setModalVisible(true)}
-            onPress={() =>
-        {
-          //pass data to invest file
-          setCapital(item.buss_capital),
-          setbussID(item.buss_id),
-          setreceiverID(item.user_id),
-          HandlepopUp()
-        }
-			  }
-        >
-            <Text style={[styles.textStyle, { fontSize: textSize }]}>Navigate Invest</Text>
+             onPress={() => {
+          navigation.navigate('Timeline', { id: item.buss_id });//pass data to timeline
+        }}
+            >
+                <Text style={[styles.textStyle, { fontSize: textSize }]}>View Timeline</Text>
            </TouchableOpacity>
             </Pressable>
 
-            <Pressable onPress={() => {}} style={styles.actionButton}>
+            </View> */}
+
+
+            <View style={styles.actions}>
+
+
+
+            {/* <Pressable onPress={() => {}} style={styles.actionButton}>
             <TouchableOpacity
              style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
-             onPress={() => {Notfication(item.user_id, item.buss_id)}}
+             onPress={() => {
+          navigation.navigate('InvestorsReturn', {id: item.buss_id  });//pass data to timeline
+        }}
             >
-                <Text style={[styles.textStyle, { fontSize: textSize }]}>Notification Test</Text>
+                <Text style={[styles.textStyle, { fontSize: textSize }]}>Return</Text>
+           </TouchableOpacity>
+            </Pressable> */}
+
+            {item.buss_status === "start" ? (
+  <>
+  <Pressable onPress={() => {}} style={styles.actionButton}>
+            <TouchableOpacity
+             style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
+             onPress={() => {
+          navigation.navigate('InvestorsReturn', {id: item.buss_id  });//pass data to timeline
+        }}
+            >
+                <Text style={[styles.textStyle, { fontSize: textSize }]}>Return</Text>
            </TouchableOpacity>
             </Pressable>
+
+  </>
+):(item.buss_status === "complete" ? (
+  <Text style={styles.actionText}>Business succesfully completed!</Text>
+):(  <Text style={styles.actionText}>Waiting for approval</Text>
+)
+  
+)}
+
+
+{/* <Pressable onPress={() => {}} style={styles.actionButton}>
+            <TouchableOpacity
+             style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
+             onPress={() => {
+          navigation.navigate('Funds', {id: item.buss_id  });//pass data to timeline
+        }}
+            >
+                <Text style={[styles.textStyle, { fontSize: textSize }]}>Funds</Text>
+           </TouchableOpacity>
+            </Pressable> */}
+
+
+
+            {/* <Pressable onPress={() => {}} style={styles.actionButton}>
+            <TouchableOpacity
+             style={[styles.button3, styles.buttonOpen,{ width: buttonWidth, height: buttonHeight }]}
+             onPress={() => {
+          navigation.navigate('InvestorsReturn', {id: item.buss_id  });//pass data to timeline
+        }}
+            >
+                <Text style={[styles.textStyle, { fontSize: textSize }]}>Return</Text>
+           </TouchableOpacity>
+            </Pressable> */}
+
+
+
+            
 
 
             </View>
- */}
 
 
-			</TouchableOpacity>
-		  )}
-		  ref={(ref) => {
-			listViewRef = ref;
-		  }}/>
+
+
+			</View>
+
+      ))}
+
 
 </View>
-      
+      </ScrollView>
+
   )}
 
 
-{/* //for pop up in investment */}
-{ visible ? <Invest data={[capital, receiverID, bussID]} hidePopup={HandlepopUp}  />: ""}
 
 
 
@@ -633,7 +541,7 @@ const handleRefresh = () => {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: 10,
+        marginTop: 5,
       },
       actionButton: {
         flexDirection: 'row',
@@ -730,10 +638,10 @@ const handleRefresh = () => {
         // width:"60%",
       },
       buttonOpen: {
-        backgroundColor: '#F194FF',
+        backgroundColor: "#534c88",
       },
       buttonClose: {
-        backgroundColor: '#2196F3',
+        backgroundColor: "#534c88",
       },
       textStyle: {
         color: 'white',
@@ -782,9 +690,15 @@ const handleRefresh = () => {
         borderWidth:0.5,
         marginTop:3,
       },
-    
+      actionFunds: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      },
+
+
     
 });
   
-  export default Search;
+  export default BussinessViewEntrep;
   

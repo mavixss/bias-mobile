@@ -1,15 +1,14 @@
 import React, { useState,useEffect } from 'react';
 import axios from "axios";
-import { StatusBar } from "expo-status-bar";
 import { Button, FlatList, StyleSheet, Text, View, ToastAndroid, Image, TextInput, TouchableOpacity, ScrollView } from "react-native";
-import FontAwesome from 'react-native-vector-icons/FontAwesome';import { AntDesign } from '@expo/vector-icons';
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from '@react-navigation/native';
+import {NETWORK_ADDPOCKET} from '@env';
+import { AntDesign } from '@expo/vector-icons';
 
 const ForgotPasswordCodeInput = () => {
   const navigation = useNavigation();
 
-  const [code, setCode] = useState(['', '', '', '']);
+  const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [pass, setPass] = useState("");
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -17,8 +16,39 @@ const ForgotPasswordCodeInput = () => {
   const [email, setEmail] = useState("")
   const [showChangePass, setshowChangePass] = useState(false)
   const [showCodeForm, setShowCodeForm] = useState(false)
-  const [generatedCode, setGeneratedCode] = useState('')
+  // const [generatedCode, setGeneratedCode] = useState('')
   const inputRefs = Array(4).fill(0).map((_, index) => React.createRef());
+
+  const [isFocusedEmail, setIsFocusedEmail] = useState(false);
+  const [isFocusedPass, setIsFocusedPass] = useState(false);
+  const [isFocusedConfrmPass, setIsFocusedConfrmPass] = useState(false);
+  const [generatedCodes, setGeneratedCodes] = useState("");
+
+
+  const handleFocusEmail = () => {
+    setIsFocusedEmail(true);
+  };
+
+  const handleBlurEmail = () => {
+    setIsFocusedEmail(false);
+  };
+
+  const handleFocusPass = () => {
+    setIsFocusedPass(true);
+  };
+
+  const handleBlurPass = () => {
+    setIsFocusedPass(false);
+  };
+
+  const handleFocusCnfrmPass = () => {
+    setIsFocusedConfrmPass(true);
+  };
+
+  const handleBlurCnfrmPass = () => {
+    setIsFocusedConfrmPass(false);
+  };
+
 
 
 
@@ -49,27 +79,18 @@ const ForgotPasswordCodeInput = () => {
 
 
 
-  const handleCodeChange = (text, index) => {
-    if (text.length <= 1) {
-      code[index] = text;
-      setCode([...code]);
-      if (index < 3 && text.length > 0 && inputRefs[index + 1].current) {
-        inputRefs[index + 1].current.focus();
-      }
-    }
-  };
 
   const handleSubmit = () => {
-    const enteredCode = code.join('');
+    // const enteredCode = code.join('');
 
-    if (enteredCode.length !== 4) {
+    if (code.length !== 6) {
       setError('Please enter a 4-digit code.');
     } 
     else {
       setError('');
-      if (enteredCode === generatedCode) {
-        alert("Code Match");
-        console.log('Code submitted:', enteredCode);
+      if (parseInt(code) === parseInt(generatedCodes)) {
+        ToastAndroid.show("Code Match!", ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+        console.log('Code submitted:', code);
         setshowChangePass(true)
     }
     else {
@@ -82,7 +103,7 @@ const ForgotPasswordCodeInput = () => {
 
 const handleUpdateUserPass = () => {
   if (pass === confirmPassword) { // Check if pass matches confirmPassword
-    axios.post("http://192.168.8.103:19001/UpdateUserPass", {
+      axios.post(`${NETWORK_ADDPOCKET}/UpdateUserPass`, {
       password: pass,
       email: email
     })
@@ -102,21 +123,41 @@ const handleUpdateUserPass = () => {
 };
 
 
-const handleSendCode = () => {
-  axios.post("http://192.168.8.103:19001/handleSendCode", {
-    // Axios.post(`${process.env.REACT_APP_NETWORK_ADD}:19001/testLogin`, {
+const handleLoginCode = () => {
+  const min = 100000; // Minimum value for a 6-digit number
+  const max = 999999; // Maximum value for a 6-digit number
+  const randomCode = Math.floor(Math.random() * (max - min + 1)) + min;    
+  setGeneratedCodes(randomCode); // Update state with the generated code
+  // console.log("randomCode")
+  console.log(randomCode)
+
+
+
+  axios.post(`${NETWORK_ADDPOCKET}/sendCodetoEmail`, {
     email: email,
+    code: randomCode, // Use the generated code directly in the POST request
+  })
+    .then((res) => {
+      console.log(res.data.message)
+    })
+    .catch((error) => console.log(error));
+};        
+
+
+
+const handleSendCode = () => {
+    axios.post(`${NETWORK_ADDPOCKET}/handleSendCode`, {
+      email: email,
   })
   
   .then((res) =>  
   {
-    // console.log(res.data)
     if(res.data.success)
     {
       ToastAndroid.show("Email Verify!",
       ToastAndroid.SHORT,ToastAndroid.BOTTOM)
-      setGeneratedCode(res.data.code)
-      console.log(res.data.code)
+      // console.log(res.data.code)
+      handleLoginCode();
       setShowCodeForm(true)
     }
     else 
@@ -142,7 +183,7 @@ const handleSendCode = () => {
     {showChangePass ? (
     <View style={styles.container}>
 <Text style={{fontSize:14,paddingRight: "80%"}}>Password</Text>
-         <View style={styles.inputContainer}>
+         <View style={[styles.inputContainer, isFocusedPass && styles.focusedInput]}>
          <TextInput
            style={styles.inputbday}
            secureTextEntry={secureTextEntry}
@@ -150,6 +191,9 @@ const handleSendCode = () => {
           onChangeText={validatePassword}
              placeholder="Password"
              value={pass}
+             autoCapitalize="none"
+             onFocus={handleFocusPass}
+             onBlur={handleBlurPass}
          />
          <TouchableOpacity
          //  style={{marginLeft: "65%",}}
@@ -168,13 +212,16 @@ const handleSendCode = () => {
       )}
 
        <Text style={{fontSize:14,paddingRight: "66%"}}>Confirm Password</Text>
-         <View style={styles.inputContainer}>
+       <View style={[styles.inputContainer, isFocusedConfrmPass && styles.focusedInput]}>
          <TextInput
            style={styles.inputbday}
            placeholder="Confirm Password"
-        onChangeText={(text) => setConfirmPassword(text)}
-        secureTextEntry={secureConfrmTextEntry}
-        value={confirmPassword}
+           onChangeText={(text) => setConfirmPassword(text)}
+           secureTextEntry={secureConfrmTextEntry}
+           value={confirmPassword}
+           autoCapitalize="none"
+           onFocus={handleFocusCnfrmPass}
+           onBlur={handleBlurCnfrmPass}
          />
          <TouchableOpacity
          //  style={{marginLeft: "65%",}}
@@ -190,7 +237,7 @@ const handleSendCode = () => {
         <Text style={{ color: 'red',paddingRight: "40%" }}>Passwords do not match</Text>
       )}
 
-      <TouchableOpacity style={styles.button} onPress={handleUpdateUserPass}>
+      <TouchableOpacity style={styles.button}  onPress={() => handleUpdateUserPass()}>
         <Text style={{ color: '#ffffff' }}>Submit</Text>
       </TouchableOpacity>
       </View>
@@ -200,22 +247,20 @@ const handleSendCode = () => {
 <View style={styles.container}>
        <Text style={styles.label}>Enter Verification Code:</Text>
       <View style={styles.codeContainer}>
-        {code.map((value, index) => (
-          <TextInput
-            key={index}
-            style={styles.input}
-            placeholder=""
-            value={value}
-            onChangeText={(text) => handleCodeChange(text, index)}
-            keyboardType="numeric"
-            maxLength={1}
-            ref={inputRefs[index]}
-          />
-        ))}
+
+        <TextInput
+        style={styles.input1}
+        placeholder="Enter Code"
+        onChangeText={(text) => setCode(text)}
+        value={code}
+        keyboardType="numeric"
+
+      />
+
       </View>
       <Text style={styles.errorText}>{error}</Text>
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+      <TouchableOpacity style={styles.button}  onPress={() => handleSubmit()}>
         <Text style={{ color: '#ffffff' }}>Send Code</Text>
       </TouchableOpacity>
 </View>
@@ -225,16 +270,18 @@ const handleSendCode = () => {
 <View style={styles.container}>
 
    <Text style={{fontSize:14,paddingRight: "80%"}}>Email</Text>
-         <View style={styles.inputContainer}>
+   <View style={[styles.inputContainer, isFocusedEmail && styles.focusedInput]}>
          <TextInput
            style={styles.inputbday}
            placeholder="Enter Email"
         onChangeText={(text) => setEmail(text)}
         value={email}
+        onFocus={handleFocusEmail}
+        onBlur={handleBlurEmail}
          />
        </View>
 
-       <TouchableOpacity style={styles.button} onPress={handleSendCode}>
+       <TouchableOpacity style={styles.button} onPress={() => handleSendCode()}>
         <Text style={{ color: '#ffffff' }}>Submit</Text>
       </TouchableOpacity>
       </View>
@@ -304,6 +351,9 @@ const styles = StyleSheet.create({
     // flex: 1,
     height: 45,
     width:"92%",
+  },
+  focusedInput: {
+    borderColor: "#534c88", // Change this to the color you want on focus
   },
 
 

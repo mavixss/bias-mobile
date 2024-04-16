@@ -6,12 +6,6 @@ import {
 	Text,
 	TouchableOpacity,
 	Image,
-	Button,
-	Alert,
-	Avatar,
-	TextInput,
-	handleSearchTextChange,
-	searchText,
 	ToastAndroid,
 	RefreshControl,
 	props,
@@ -21,11 +15,9 @@ import {
   import AsyncStorage from "@react-native-async-storage/async-storage";
   import React, { useEffect, useState } from "react";
   import { useNavigation } from "@react-navigation/native";
-  
-  import { StatusBar } from "expo-status-bar";
-  import Upload from "./Upload";
-  import { format } from 'date-fns';
   import SocialIcon from 'react-native-vector-icons/AntDesign';
+  import {NETWORK_ADDPOCKET} from '@env';
+  import LoadingScreen from "./LoadingScreen";
 
 
 export const logoutIcon = (<AntDesign name="logout" size={40} color="black" />);
@@ -37,13 +29,18 @@ export const questionIcon = (<SocialIcon name="questioncircleo" size={40} color=
   
   const Notif = () => {
 
-
 const navigation = useNavigation();
-const [notifData, setNotifData] = useState([]);
+const [isLoading, setIsLoading] = useState(true);
+const [userid,setUserid] = useState([]);
+const[notifid, setnotifid] = useState([]);
+const [notifList, setNotifList] = useState([]);
+const[user, setUser] = useState('');
+const[userTypee, setUserType] = useState();
+const[dataID, setData] = useState([]);
+//for drag to refresh
+const [refreshing, setRefreshing] = useState(false);
 
 
-const [buttonStatus, setbuttonStatus] = useState(true);
-const [useSearch, setSearch] = useState("");
 
 
 const formatDate = (date) => {
@@ -59,88 +56,65 @@ const formatDate = (date) => {
     // Customize the format as needed
   };
 
-  const[user, setUser] = useState('');
-  const[dataID, setData] = useState([]);
-
-
-  useEffect(() => {
-	Axios.post("http://192.168.8.103:19001/getNotifDisplayFinal",{
-	  user:user
-	})
-	  // .then((res) => setData(res.data.results[0]))
-	  .then((res) => setData(res.data)
-	  )
-
-	  //  .then((data) => setData(data)
-	  .catch((error) => console.log(error));
-
-  }, [dataID]);
-
-  const findUser = async () => {
-	const result = await AsyncStorage.getItem('userID');
-	  console.log(result);
-	  if(!result){
-		navigation.navigate("Login")
+  const fetchDataUser = async () => {
+	try {
+	  const userId = await AsyncStorage.getItem('userID');
+	  const userType = await AsyncStorage.getItem('userType');
   
+	  if (!userId || !userType) {
+		navigation.navigate("Login");
+		return;
 	  }
-	setUser(JSON.parse(result))
-	};
   
-	useEffect(() => {
-	  findUser();
-	},[])
-  
-
-useEffect(() => {
-Axios.get("http://192.168.8.103:19001/getNotifDisplay")
-.then((result) => setNotifData(result.data)) 
-.catch((error) => console.log(error))
-},[notifData]);
-
-
-const sendNotification = () => {
-	Axios.post('http://192.168.8.103:19001/sendNotification', {
-	  // Include data needed to identify the recipient and the notification message
-	})
-	.then((response) => {
-	  console.log('Notification sent successfully');
-	})
-	.catch((error) => {
-	  console.error('Error sending notification: ' + error);
-	});
+	  setUser(JSON.parse(userId));
+	  setUserType(JSON.parse(userType));
+	} catch (error) {
+	  // Handle AsyncStorage errors
+	  console.error("AsyncStorage error:", error);
+	}
   };
-
-
   
-//for drag to refresh
-const [refreshing, setRefreshing] = useState(false);
+  useEffect(() => {
+	fetchDataUser();
+	// NotifStatusRead();
+  }, []);
+  
 
 
-useEffect(() => {
-  // Fetch your initial data here
-  fetchData();
-}, []);
-
-const fetchData = () => {
-  // Simulate fetching data
-  setTimeout(() => {
-    const newData = [...dataID, { key: Date.now().toString() }];
-    setData(newData);
-    setRefreshing(false);
-  }, 1000);
-};
-
-const handleRefresh = () => {
-  setRefreshing(true);
-  fetchData();
-};
 
 
-const NotifStatusRead = (notifID) => {
-    Axios.post("http://192.168.8.103:19001/NotifStatusRead", {
+	useEffect(() => {
+		// Fetch your initial data here
+		fetchData();
+	  }, []);
+	  
+	  const fetchData = () => {
+		// Simulate fetching data
+		setTimeout(() => {
+		  const newData = [...notifList, { key: Date.now().toString() }];
+		  setData(newData);
+		  setRefreshing(false);
+		}, 1000);
+	  };
+	  
+	  const handleRefresh = () => {
+		setRefreshing(true);
+		fetchData();
+	  };
+	  
+
+	
+			setTimeout(() => {
+			  setIsLoading(false); // Set isLoading to false when data is loaded
+			}, 5000); // Simulate a 2-second loading time
+		
+		
+
+		
+		const NotifStatusRead = (notifID) => {
+		Axios.post(`${NETWORK_ADDPOCKET}/NotifStatusRead`,{
 		notifID:notifID,
-
-    })
+		})
       .then((res) =>  
       // {
         ToastAndroid.show("Readed!",
@@ -151,78 +125,298 @@ const NotifStatusRead = (notifID) => {
   };
 
 
+  useEffect(() => {
+	if (userTypee === "entrepreneur") {
+	  Axios.post(`${NETWORK_ADDPOCKET}/getNotification`, {
+		user_id: user,
+		notif_type: "business",
+	  })
+		.then((res) => {
+		  if (res.data.status) {
+			const dataResponse = res.data.result;
+			const sortedData = dataResponse.sort(
+			  (a, b) =>
+				new Date(b.notif_created_at) - new Date(a.notif_created_at)
+			);
+  
+			setNotifList(sortedData);
+		  }
+		})
+		.catch((error) => {
+		  alert(error);
+		});
+	} else if (userTypee === "investor") {
+	  Axios.post(`${NETWORK_ADDPOCKET}/getNotification`, {
+		user_id: user,
+		notif_type: "investment",
+	  })
+		.then((res) => {
+		  if (res.data.status) {
+			const dataResponse = res.data.result;
+			const sortedData = dataResponse.sort(
+			  (a, b) =>
+				new Date(b.notif_created_at) - new Date(a.notif_created_at)
+			);
+  
+			setNotifList(sortedData);
+		  }
+		})
+		.catch((error) => {
+		  alert(error);
+		});
+	}
+  }, [user, userTypee]);
+  
 
 
-
-
-const [userid,setUserid] = useState([]);
-const[notifid, setnotifid] = useState([]);
   
 	return (
 	  <SafeAreaView style={{ flex: 1, height: "100%" }}>
+  {isLoading ? (
 
-<View style={{maxHeight:"92%"}}>
+<LoadingScreen />
+):(
+  <View>
+		{userTypee === 'entrepreneur' ? (
 
-		<FlatList
-		 ListEmptyComponent={
-			<View >
-				<Text style={styles.emptyListStyle}>
-					NO DATA FOUND
-				</Text>
-			</View>}
-		ItemSeparatorComponent={() => {
-        return <View style={styles.separator} />
-        }}
+		<View style={{maxHeight:"96%"}}>
 
 
-		   data={dataID}
-		  keyExtractor={(item, index) => index.toString()}
-      //for drag to refresh
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-        />
-      }
-		  renderItem={({ item }) => (
-
-			<TouchableOpacity  style={styles.container}
-			onPress={() => {
-			setUserid(item.user_id_reciever),
-          setnotifid(item.notif_id),
-		// console.log(userid);
-		// console.log(notifid)
-
-		  navigation.navigate("InvestorsInfo", { user_id: [item.user_id_reciever], notif_id: [item.notif_id], buss_id: [item.user_buss_id],invst_id: [item.invst_id] }),
-		  NotifStatusRead(item.notif_id)
-
-		 
-
+			<FlatList
+			ListEmptyComponent={
+				<View >
+					<Text style={styles.emptyListStyle}>
+						NO DATA FOUND
+					</Text>
+				</View>}
+			ItemSeparatorComponent={() => {
+			return <View style={styles.separator} />
 			}}
-			>
-		    <Image  
-  			style={styles.image}
-  			source={item.investorProfile ? { uri: item.investorProfile } : require("./assets/prrofilee.png")}
+
+
+			data={notifList}
+			keyExtractor={(item, index) => index.toString()}
+			//for drag to refresh
+			refreshControl={
+			<RefreshControl
+			refreshing={refreshing}
+			onRefresh={handleRefresh}
 			/>
+			}
+			renderItem={({ item }) => (				
+			<TouchableOpacity  
+				style={[styles.container,item.notif_status === 'unread' ? { backgroundColor: 'lightblue' } : null,]}
+				onPress={() => {
+				setUserid(item.user_id_reciever),
+				setnotifid(item.notif_id),
 
-		  <View style={styles.content}>
-		  <View style={styles.contentHeader}>
-            <Text style={styles.name}> {item.notif_id} {item.user_buss_id} {item.invst_id} {item.investors_fname} {item.investors_lname}</Text> 
-            <Text style={styles.time}> {formatDate(item.notif_created_at)}</Text>
-		  </View>
-		  <Text rkType="primary3 mediumLine">{item.notif_content}</Text>
-		  </View>
-		
-		  
-		</TouchableOpacity>
+				// navigation.navigate("InvestorsInfo", { user_id: [item.user_id_reciever], notif_id: [item.notif_id], buss_id: [item.user_buss_id],invst_id: [item.invst_id] }),
+				NotifStatusRead(item.notif_id)
+				}}
+				>
+
+				 {item.notif_type === "buss_update" ? (
+					<>
+					<Image  
+				style={styles.image}
+				source={item.buss_photo ? { uri: item.buss_photo } : require("./assets/prrofilee.png")}
+
+				/>
+
+			<View style={styles.content}>
+			<View style={styles.contentHeader}>
+				<Text style={styles.name}>{item.buss_name}</Text> 
+				<Text style={styles.time}> {formatDate(item.notif_created_at)}</Text>
+			</View>
+				<Text rkType="primary3 mediumLine">{item.notif_content}</Text>
+			</View>
+
+					</>
+				): item.notif_type === "investment" ? (
+			 	<>
+				 <Image  
+				style={styles.image}
+				source={item.buss_photo ? { uri: item.buss_photo } : require("./assets/prrofilee.png")}
+				/>
+
+			<View style={styles.content}>
+			<View style={styles.contentHeader}>
+				<Text style={styles.name}>{item.buss_name}</Text> 
+				<Text style={styles.time}> {formatDate(item.notif_created_at)}</Text>
+			</View>
+				<Text rkType="primary3 mediumLine">{item.notif_content}</Text>
+			</View>
+
+				</>
+				): item.notif_type === "buss_invest" ? (
+				 	<>
+					 <Image  
+				style={styles.image}
+				source={item.investorProfile ? { uri: item.investorProfile } : require("./assets/prrofilee.png")}
+				/>
+
+			<View style={styles.content}>
+			<View style={styles.contentHeader}>
+				<Text style={styles.name}>{item.firstname} {item.lastname}</Text> 
+				<Text style={styles.time}> {formatDate(item.notif_created_at)}</Text>
+			</View>
+				<Text rkType="primary3 mediumLine">{item.notif_content}</Text>
+			</View>
+
+					</>
+				 ): item.notif_type === "user" ? (
+					<>
+					<Image  
+				style={styles.image}
+				source={item.investorProfile ? { uri: item.investorProfile } : require("./assets/prrofilee.png")}
+				/>
+
+			<View style={styles.content}>
+			<View style={styles.contentHeader}>
+				<Text style={styles.name}>{item.firstname} {item.lastname}</Text> 
+				<Text style={styles.time}> {formatDate(item.notif_created_at)}</Text>
+			</View>
+				<Text rkType="primary3 mediumLine">{item.notif_content}</Text>
+			</View>
+
+					</>
+				): ""}
 
 
-		  )}
-		  ref={(ref) => {
-			listViewRef = ref;
-		  }}/>
 
-</View>
+			
+			</TouchableOpacity>
+
+
+			)}
+			ref={(ref) => {
+				listViewRef = ref;
+			}}/>
+
+		</View>
+		): userTypee === 'investor' ? (
+			<View style={{maxHeight:"96%"}}>
+			
+			<FlatList
+			ListEmptyComponent={
+				<View >
+					<Text style={styles.emptyListStyle}>
+						NO DATA FOUND
+					</Text>
+				</View>}
+			ItemSeparatorComponent={() => {
+			return <View style={styles.separator} />
+			}}
+
+
+			data={notifList}
+			keyExtractor={(item, index) => index.toString()}
+			//for drag to refresh
+			refreshControl={
+			<RefreshControl
+			refreshing={refreshing}
+			onRefresh={handleRefresh}
+			/>
+			}
+			renderItem={({ item }) => (
+				
+				
+				
+				<TouchableOpacity  
+				style={[styles.container,item.notif_status === 'unread' ? { backgroundColor: 'lightblue' } : null,]}
+				onPress={() => {
+				setUserid(item.user_id_reciever),
+			setnotifid(item.notif_id),
+
+			// navigation.navigate("InvestorsInfo", { user_id: [item.user_id_reciever], notif_id: [item.notif_id], buss_id: [item.user_buss_id],invst_id: [item.invst_id] }),
+			NotifStatusRead(item.notif_id)
+
+			
+
+				}}
+				>
+				 {item.notif_type === "buss_update" ? (
+					<>
+					<Image  
+				style={styles.image}
+				source={item.buss_photo ? { uri: item.buss_photo } : require("./assets/prrofilee.png")}
+				/>
+
+			<View style={styles.content}>
+			<View style={styles.contentHeader}>
+				<Text style={styles.name}>{item.buss_name}</Text> 
+				<Text style={styles.time}> {formatDate(item.notif_created_at)}</Text>
+			</View>
+				<Text rkType="primary3 mediumLine">{item.notif_content}</Text>
+			</View>
+
+					</>
+				): item.notif_type === "investment" ? (
+			 	<>
+				 <Image  
+				style={styles.image}
+				source={item.buss_photo ? { uri: item.buss_photo } : require("./assets/prrofilee.png")}
+				/>
+
+			<View style={styles.content}>
+			<View style={styles.contentHeader}>
+				<Text style={styles.name}>{item.buss_name}</Text> 
+				<Text style={styles.time}> {formatDate(item.notif_created_at)}</Text>
+			</View>
+				<Text rkType="primary3 mediumLine">{item.notif_content}</Text>
+			</View>
+
+				</>
+				): item.notif_type === "buss_invest" ? (
+				 	<>
+					 <Image  
+				style={styles.image}
+				source={item.investorProfile ? { uri: item.investorProfile } : require("./assets/prrofilee.png")}
+				/>
+
+			<View style={styles.content}>
+			<View style={styles.contentHeader}>
+				<Text style={styles.name}>{item.firstname} {item.lastname}</Text> 
+				<Text style={styles.time}> {formatDate(item.notif_created_at)}</Text>
+			</View>
+				<Text rkType="primary3 mediumLine">{item.notif_content}</Text>
+			</View>
+
+					</>
+				 ): item.notif_type === "user" ? (
+					<>
+					<Image  
+				style={styles.image}
+				source={item.investorProfile ? { uri: item.investorProfile } : require("./assets/prrofilee.png")}
+				/>
+
+			<View style={styles.content}>
+			<View style={styles.contentHeader}>
+				<Text style={styles.name}>{item.firstname} {item.lastname}</Text> 
+				<Text style={styles.time}> {formatDate(item.notif_created_at)}</Text>
+			</View>
+				<Text rkType="primary3 mediumLine">{item.notif_content}</Text>
+			</View>
+
+					</>
+				): ""}
+
+			
+			</TouchableOpacity>
+
+
+			)}
+			ref={(ref) => {
+				listViewRef = ref;
+			}}/>
+
+
+		</View>
+
+		): null}
+
+		</View>
+		)}
 	  </SafeAreaView>
 	);
   };

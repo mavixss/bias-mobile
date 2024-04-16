@@ -1,16 +1,15 @@
 
 
-
-import { StyleSheet, Text, View, Image, TextInput,handleSearchTextChange, ScrollView, TouchableOpacity, Button, ToastAndroid, FlatList } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, ToastAndroid, FlatList } from 'react-native';
 import React from 'react';
 import { useEffect, useState } from "react";
 import { useNavigation } from '@react-navigation/native';
 import { update } from 'firebase/database';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Axios from "axios";
-import { Ionicons } from '@expo/vector-icons';
 import { useRoute } from '@react-navigation/native';
-import {NETWORK_ADD} from '@env';
+import {NETWORK_ADDPOCKET} from '@env';
+import { Ionicons } from '@expo/vector-icons';
 
 
 
@@ -18,35 +17,27 @@ const ProfileView = ({data}) => {
   const navigation = useNavigation();
   const route = useRoute();
 //   const id = route.params.id; //from feeds
-const id = data[0];
-
-
-  const [isDisabled, setDisabled] = useState(false);
-  const [useSearch, setSearch] = useState("");
-
+  const id = data[0];
 
 
   const[user, setUser] = useState('');
-  const[test, setTest] = useState('');
-  // console.log(test);
   
 
   const[dataID, setData] = useState([]);
 
     useEffect(() => {
-      Axios.post(`${NETWORK_ADD}:19001/getIdFinal`,{
+      Axios.post(`${NETWORK_ADDPOCKET}/getIdFinal`,{
         user:id
       })
-        // .then((res) => setData(res.data.results[0]))
-        .then((res) => setData(res.data.results)
+        .then((res) => {
+          console.log(res.data.results)
+          setData(res.data.results)}
+        
         )
-
-        //  .then((data) => setData(data)
         .catch((error) => console.log(error));
 
-    }, [dataID]);
+    }, []);
   
-
   const findUser = async () => {
   const result = await AsyncStorage.getItem('userID');
     console.log(result);
@@ -61,16 +52,38 @@ const id = data[0];
     findUser();
   },[])
 
-
-  const dataTest = (e) => {
-    setTest(e);
+  const formatDate = (date) => {
+    const formattedDate = new Date(date);
+    const hours = formattedDate.getHours();
+    const minutes = formattedDate.getMinutes();
+    const amPm = hours >= 12 ? 'PM' : 'AM';
+  
+    // Convert hours from 24-hour format to 12-hour format
+    const formattedHours = hours % 12 || 12;
+  
+    const monthNames = [
+      'January', 'February', 'March', 'April',
+      'May', 'June', 'July', 'August',
+      'September', 'October', 'November', 'December'
+    ];
+  
+    const monthName = monthNames[formattedDate.getMonth()];
+  
+    return `${monthName} ${formattedDate.getDate()} ${formattedDate.getFullYear()} ${formattedHours}:${minutes < 10 ? '0' : ''}${minutes} ${amPm}`;
+    // Customize the format as needed
   };
+
   
 return (
 
 <View style={styles.container}>
-{/* <Text>{user}</Text> */}
 <View style={{flexDirection:'row'}}>
+<View style={styles.searchContainer}>
+      </View>
+<TouchableOpacity 
+        onPress={() => navigation.navigate('Settings')}>
+       <Ionicons name="ios-reorder-three-outline" size={36} color="black" />
+    </TouchableOpacity>
 
 </View>
 
@@ -95,11 +108,9 @@ return (
         
         </TouchableOpacity>
      <Text style={styles.nameText}>{item.user_fname + ' ' + item.user_lname}
-     {/* { setTest(item.user_fname)} */}
     </Text>
 
-    <Text style={styles.statusText}>{item.user_status}
-     {/* { setTest(item.user_fname)} */}
+    <Text style={styles.statusText}>{item.user_status} 
     </Text>
 
 
@@ -107,36 +118,39 @@ return (
     </View> 
 
     <View style={styles.bioContainer}>
-        <Text style={styles.bioText}>
-        Worry weighs a person down; an encouraging word cheers a person up.
-        </Text>
-      </View>
+    <Text style={styles.sectionTitle}>Information</Text>
+    <Text style={styles.bioText}>
+    Joined since {formatDate(item.user_created_at)}
+  </Text>
+    <Text style={styles.bioText}>{item.user_email}</Text>
+    <Text style={styles.bioText}>
+    Contact Number: {item.user_contact_num }
+  </Text>
+  <Text style={styles.bioText}>
+    Address: {item.user_province } {item.user_city} {item.user_barangay}
+  </Text>
 
-      <View style={styles.statsContainer}>
-        <View style={styles.statContainer}>
-          <Text style={styles.statCount}>1234</Text>
-          <Text style={styles.statLabel}>Posts</Text>
-        </View>
-        <View style={styles.statContainer}>
-          <Text style={styles.statCount}>5678</Text>
-          <Text style={styles.statLabel}>Followers</Text>
-        </View>
-        <View style={styles.statContainer}>
-          <Text style={styles.statCount}>9101</Text>
-          <Text style={styles.statLabel}>Following</Text>
-        </View>
       </View>
+      {(item.user_identity_status === "pending" || item.user_identity_status === "approved") ? (
+          null 
+        ) : (
+    
+    <TouchableOpacity
+          onPress={() => navigation.navigate("UploadID")}
+          style={[styles.buttonn]}
+        >
+          <Text style={styles.buttonText}>Verify Now!</Text>
+        </TouchableOpacity>
+      
+    
+        )
+      }
 
 
 </View>
 
   )}
   />
-
-
-
-
-
 
 </View>
 
@@ -185,8 +199,14 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   bioText: {
-    fontSize: 16,
+    fontSize: 14,
   },
+  bioTextSeeMore: {
+    fontSize: 16,
+    color: "blue"
+
+  },
+
   statsContainer: {
     flexDirection: 'row',
     marginTop: 20,
@@ -241,7 +261,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     fontSize: 16,
     padding: 8,
-borderColor:"#685f93",
+    borderColor:"#685f93",
     shadowColor: '#cccccc',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.8,
@@ -254,6 +274,11 @@ borderColor:"#685f93",
     borderRadius: 25,
 
   },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+
 
 
 });

@@ -22,8 +22,6 @@ import {
   import React, { useEffect, useState } from "react";
   import { useNavigation } from "@react-navigation/native";
   
-  import { StatusBar } from "expo-status-bar";
-  import Upload from "./Upload";
 
   
   const Investor = ({route}) => {

@@ -32,7 +32,9 @@ import * as DocumentPicker from "expo-document-picker";
 import { MaterialIcons } from '@expo/vector-icons';
 import { Checkbox } from 'react-native-paper';
 import { Loan } from 'loanjs';
-import {NETWORK_ADD} from '@env';
+import {NETWORK_ADDPOCKET} from '@env';
+import 'react-native-get-random-values';
+import uuid from "react-native-uuid";
 
 
 
@@ -57,7 +59,7 @@ export default function UploadBusiness() {
 
 
   const [businessName, setbusinessName] = useState("");
-  const [businessCapital, setbusinessCapital] = useState("");
+  const [businessCapital, setBussinessCapital] = useState("");
   const [businessDetails, setbusinessDetails] = useState("");
   const[place, setPlace] = useState("")
   const[summary,setSummary] = useState("")
@@ -96,6 +98,91 @@ export default function UploadBusiness() {
 
   }
 
+// FOR FUNDS LIST
+
+const [item,setItem] = useState("")
+const [price,setPrice] = useState("")
+const [useFunds, setUseFunds] = useState([])
+const addItem = (item) => {
+  setUseFunds([...useFunds, item])
+}
+
+const removeItem = (item) => {
+  setUseFunds(useFunds.filter(i => i !== item))
+}
+
+
+const handleValidationFunds = () => {
+
+  if (!item || !price) {
+    ToastAndroid.show("Please fill in all required fields", 
+    ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+
+    return; // Don't proceed with the submission if any field is empty
+
+  }
+ else{
+  addItem({
+      id: uuid.v4(),
+      products: item,
+      amount: price,
+    })
+    setPrice("")
+    setItem("")
+ }
+
+};
+
+useEffect (() =>{
+  console.log(JSON.stringify(useFunds))
+
+  let totalSum = 0;
+
+  for (let i = 0; i < useFunds.length; i++) {
+    totalSum += parseFloat(useFunds[i].amount);
+  }
+  console.log(totalSum)
+  const amount = totalSum;
+  
+  const listStartDate = [];
+  const listEndDate = [];
+
+  if (amount) {
+    const loans = new Loan(amount, 12, 5);
+
+    const loansInsallment = loans.installments;
+
+    setTotalReturn(loans.sum);
+    const startDate = new Date();
+    for (let i = 0; i < 12; i++) {
+      const nextStartDate = new Date(startDate);
+      nextStartDate.setMonth(startDate.getMonth() + i);
+      listStartDate.push(nextStartDate);
+
+      const nextEndDate = new Date(nextStartDate);
+      nextEndDate.setMonth(nextStartDate.getMonth() + 1);
+      nextEndDate.setDate(nextStartDate.getDate() - 1);
+      listEndDate.push(nextEndDate);
+    }
+    const updateReturnsWithDate = loansInsallment.map((item, index) => ({
+      ...item,
+      mindate: `${listStartDate[index].toDateString()} `,
+      maxdate: `${listEndDate[index].toDateString()}`,
+      // status: "not paid",
+      id: `${listStartDate[index].getMonth() + 1}-${listStartDate[
+        index
+      ].getDate()}-${listStartDate[index].getFullYear()}-${uuid.v4()}`,
+    }));
+
+    console.log(updateReturnsWithDate);
+
+    ///Installments data
+    setInstallments(updateReturnsWithDate);
+    
+  }
+  setBussinessCapital(totalSum);
+
+},[useFunds]) 
 
 
   //for checkbox
@@ -106,47 +193,15 @@ export default function UploadBusiness() {
   const[checkYesExperience, setCheckYesExperience] = useState("")
   const[checkNoExperience, setCheckNoExperience] = useState("")
 
-  // const [checkboxDataAdd, setCheckboxDataAdd] = useState({
-  //   yes: false,
-  //   no: false,
-  // });
 
-  // const [checkboxExperience, setCheckboxExperience] = useState({
-  //   yes: false,
-  //   no: false,
-  // });
-
-  const [checkboxDataAdd, setCheckboxDataAdd] = useState('No');
-  const [checkboxExperience, setCheckboxExperience] = useState('No');
+  const [checkboxDataAdd, setCheckboxDataAdd] = useState('Yes');
+  const [checkboxExperience, setCheckboxExperience] = useState('Yes');
 
 
   const [customTextAdd, setCustomTextAdd] = useState('');
   const [customTextExp, setCustomTextExp] = useState('');
 
 
-  // const handleYesPressAdd = () => {
-  //   setCheckboxDataAdd({ yes: true, no: false });
-  //   setCheckYesAdd("Yes")
-  //   console.log(checkYesAdd)
-  // };
-
-  // const handleNoPressAdd = () => {
-  //   setCheckboxDataAdd({ yes: false, no: true });
-  //   setCheckNoAdd("No")
-  //   console.log(checkNoAdd)
-  // };
-
-  // const handleYesPressExperience = () => {
-  //   setCheckboxExperience({ yes: true, no: false });
-  //   setCheckYesExperience("Yes")
-  //   console.log(checkYesExperience)
-  // };
-
-  // const handleNoPressExperience = () => {
-  //   setCheckboxExperience({ yes: false, no: true });
-  //   setCheckNoExperience("No")
-  //   console.log(checkNoExperience)
-  // };
 
 
   const handleCheckboxChange = (option, value) => {
@@ -202,7 +257,7 @@ useEffect(() => {
 
   const Pitch = () => {
     // Axios.post("http://192.168.8.103:19001/pitch", {
-      Axios.post(`${NETWORK_ADD}:19001/pitch`, {
+      Axios.post(`${NETWORK_ADDPOCKET}/pitch`, {
         user: user,
       businessName: businessName,
       businessTypeSelectd: businessTypeSelectd,
@@ -244,12 +299,12 @@ useEffect(() => {
 
   const PitchFinal  = () => {
     // Axios.post("http://192.168.8.103:19001/pitchFinal", {
-      Axios.post(`${NETWORK_ADD}:19001/pitchFinal`, {
+      Axios.post(`${NETWORK_ADDPOCKET}/pitchFinal`, {
 
       user: user,
       businessName: businessName,
       businessTypeSelectd: businessTypeSelectd,
-      bussNameSelectd:bussNameSelectd,
+      bussNameSelectd:JSON.stringify(selectedBusinesses),
       selectedProvince: selectedProvince,
       selectedCity: selectedCity,
       selectedBrgy: selectedBrgy,
@@ -260,7 +315,7 @@ useEffect(() => {
       businesstExp:customTextExp,
       bussSummary: summary,
       bussAudience:audience,
-      bussFunds:funds,
+      bussFunds:JSON.stringify(useFunds),
       buss_support_doc:docfileURL,
       businessCapital: businessCapital,
       fileURL:fileURL,
@@ -274,16 +329,36 @@ useEffect(() => {
 
     })
       .then((res) =>  
-      // {
+       {
+        setbusinessName('');
+        setbusinessTypeSelectd('');
+        setSelectedBusinesses([]);
+        setselectedProvince('');
+        setselectedCity('');
+        setselectedBrgy('');
+        setimageURL('');
+        setCheckboxDataAdd('');
+        setCustomTextAdd('');
+        setCheckboxExperience('');
+        setCustomTextExp('');
+        setSummary('');
+        setAudience('');
+        setUseFunds('');
+        setDocFileURL('');
+        setBussinessCapital('');
+        setFileURL('');
+        setTotalReturn('');
+        setInstallments('')
+  
         ToastAndroid.show("please wait for the approval",
         ToastAndroid.SHORT,ToastAndroid.BOTTOM),
 
         ToastAndroid.show("business succesfully posted!",
         ToastAndroid.LONG,ToastAndroid.BOTTOM),
-        navigation.navigate("Entreprenuer")
+        navigation.navigate("EntrepFeeds")
 
 
-          
+      } 
       )
       .catch((error) => console.log(error));
       
@@ -291,8 +366,9 @@ useEffect(() => {
 
 
   const handleValidation = () =>{
-    if(!businessName || !businessTypeSelectd || !bussNameSelectd || !selectedProvince || !selectedCity || !selectedBrgy || !imageURL 
-    || !checkboxDataAdd ||  !checkboxExperience || !summary || !audience || !funds ||  !businessCapital || !fileURL || !totalReturn || !installments)
+    if(!businessName || !businessTypeSelectd || !selectedBusinesses || !selectedProvince || !selectedCity || !selectedBrgy || !imageURL 
+    || !checkboxDataAdd ||  !checkboxExperience || !summary || !audience ||  !businessCapital || !fileURL || !totalReturn 
+    || !installments )
     {
       ToastAndroid.show("Please fill in all required fields", 
       ToastAndroid.SHORT, ToastAndroid.BOTTOM);
@@ -495,25 +571,34 @@ const pickFile = async () => {
 
 
 const FilessUpload = async () => {
+  const storagee = storage;
+  const fileRef = ref(storagee, "images/" + filename);
+  const pdf = await fetch(filee);
+  const blob = await pdf.blob();
 
-    const storagee = storage;
-    const fileRef = ref(storagee, "images/" + filename);
-    const pdf = await fetch(filee);
-    const blob = await pdf.blob();
+  const urlsArray = []; // Array to store URLs
 
-    uploadBytes(fileRef, blob).then((snap) => {
-      getDownloadURL(fileRef).then((url) => {
-         console.log(url);
-         setFileURL(url);
-      });
+  uploadBytes(fileRef, blob).then((snap) => {
+    getDownloadURL(fileRef).then((url) => {
+      // console.log(url);
+
+      urlsArray.push(url); // Push the URL into the array
+      setFileURL(urlsArray);
+      console.log(urlsArray);
+      // console.log(fileURL); // Log the array with the URL
+
+
     });
+  });
 
-  };
+  // If you need to use the array elsewhere, you can return it
+  return urlsArray;
+};
 
 
   const FileUrl = () => {
     // Axios.post("http://192.168.8.103:19001/fileUpload", {
-      Axios.post(`${NETWORK_ADD}:19001/fileUpload`, {
+      Axios.post(`${NETWORK_ADDPOCKET}/fileUpload`, {
         fileURL: fileURL,
     })
       .then((res) => console.log(res.data), ToastAndroid.show(
@@ -551,25 +636,34 @@ const FilessUpload = async () => {
 
 
 const DocFilesUpload = async () => {
+  const storagee = storage;
+  const fileRef = ref(storagee, "images/" + filename);
+  const pdf = await fetch(filee);
+  const blob = await pdf.blob();
 
-    const storagee = storage;
-    const fileRef = ref(storagee, "images/" + docfilename);
-    const pdf = await fetch(fileSupDoc);
-    const blob = await pdf.blob();
+  const urlsArray = []; // Array to store URLs
 
-    uploadBytes(fileRef, blob).then((snap) => {
-      getDownloadURL(fileRef).then((url) => {
-         console.log(url);
-         setDocFileURL(url);
-      });
+  uploadBytes(fileRef, blob).then((snap) => {
+    getDownloadURL(fileRef).then((url) => {
+      // console.log(url);
+
+      urlsArray.push(url); // Push the URL into the array
+      setDocFileURL(urlsArray);
+      console.log(urlsArray);
+      // console.log(fileURL); // Log the array with the URL
+
+
     });
+  });
 
-  };
+  // If you need to use the array elsewhere, you can return it
+  return urlsArray;
+};
 
 
   const DocFileUrl = () => {
     // Axios.post("http://192.168.8.103:19001/fileUpload", {
-      Axios.post(`${NETWORK_ADD}:19001/fileUpload`, {
+      Axios.post(`${NETWORK_ADDPOCKET}/fileUpload`, {
 
       fileURL: docfileURL,
     })
@@ -584,14 +678,24 @@ const DocFilesUpload = async () => {
 
   const isTableVisible = businessCapital !== '';
 
+  const [selectedBusinesses, setSelectedBusinesses] = useState([]);
+  const handleCheckboxChangee = (businessName) => {
+    let updatedSelectedBusinesses = [...selectedBusinesses];
+    const index = updatedSelectedBusinesses.indexOf(businessName);
 
+    if (index !== -1) {
+      updatedSelectedBusinesses.splice(index, 1); // Remove the item if already selected
+    } else {
+      updatedSelectedBusinesses = [...updatedSelectedBusinesses, businessName]; // Add the item if not selected
+    }
 
+    setSelectedBusinesses(updatedSelectedBusinesses);
+    // Perform any necessary actions with the selected businesses here
+    console.log(updatedSelectedBusinesses);
+  };
   
   return (
-    <View style={styles.container}>
-       
-       {/* <Text style={{fontSize:20, paddingBottom:"2%", fontWeight:"500"}}>Pitch Business</Text> */}
-
+    <View style={styles.container} >
        <ScrollView style={styles.View}
       contentContainerStyle={{flexGrow : 1, justifyContent : 'center',padding: "7%"}}>
 
@@ -650,7 +754,7 @@ const DocFilesUpload = async () => {
              buttonStyle={styles.inputContainerDropdown}
              buttonTextStyle={{fontSize:14, marginRight:"60%", }}
              renderDropdownIcon={isOpened => {
-               return <FontAwesome name={isOpened ? 'chevron-up' : 'chevron-down'} color={'#444'} size={18} />;
+               return <FontAwesome name={isOpened ? 'chevron-up' : 'chevron-down'} color={'#444'} size={12} />;
              }}
              dropdownIconPosition={'right'}
              dropdownStyle={styles.dropdown1DropdownStyle}
@@ -659,7 +763,7 @@ const DocFilesUpload = async () => {
            />
 
 
-         <SelectDropdown
+         {/* <SelectDropdown
              data={businessesName}
              onSelect={(selectedItem, index) => {
              //  console.log(selectedItem, index);
@@ -676,13 +780,29 @@ const DocFilesUpload = async () => {
              buttonStyle={styles.inputContainerDropdown}
              buttonTextStyle={{fontSize:14, marginRight:"60%", }}
              renderDropdownIcon={isOpened => {
-               return <FontAwesome name={isOpened ? 'chevron-up' : 'chevron-down'} color={'#444'} size={18} />;
+               return <FontAwesome name={isOpened ? 'chevron-up' : 'chevron-down'} color={'#444'} size={12} />;
              }}
              dropdownIconPosition={'right'}
              dropdownStyle={styles.dropdown1DropdownStyle}
              rowStyle={styles.dropdown1RowStyle}
              rowTextStyle={{fontSize:14,}}
-           />
+           /> */}
+
+          {businessesName.map((business, index) => (
+
+          <View key={index} style={styles.checkboxContainer}>
+          <Checkbox.Item
+          label={business.bussiness_name}
+          status={selectedBusinesses.includes(business.bussiness_name) ? 'checked' : 'unchecked'}
+          onPress={() => handleCheckboxChangee(business.bussiness_name)}
+          style={styles.checkbox}
+          />
+
+          </View>
+
+
+          ))}
+
 
 
 <Text style={{fontSize:20, paddingBottom:"2%", fontWeight:"500"}}>Business Address</Text>
@@ -711,7 +831,7 @@ const DocFilesUpload = async () => {
         buttonStyle={styles.inputContainerDropdown}
               buttonTextStyle={{fontSize:14, marginRight:"60%", }}
               renderDropdownIcon={isOpened => {
-                return <FontAwesome name={isOpened ? 'chevron-up' : 'chevron-down'} color={'#444'} size={18} />;
+                return <FontAwesome name={isOpened ? 'chevron-up' : 'chevron-down'} color={'#444'} size={12} />;
               }}
               dropdownIconPosition={'right'}
               dropdownStyle={styles.dropdown2DropdownStyle}
@@ -747,7 +867,7 @@ const DocFilesUpload = async () => {
         buttonStyle={styles.inputContainerDropdownRow}
               buttonTextStyle={{fontSize:14,}}
               renderDropdownIcon={isOpened => {
-                return <FontAwesome name={isOpened ? 'chevron-up' : 'chevron-down'} color={'#444'} size={18} />;
+                return <FontAwesome name={isOpened ? 'chevron-up' : 'chevron-down'} color={'#444'} size={12} />;
               }}
               dropdownIconPosition={'right'}
               dropdownStyle={styles.dropdown2DropdownStyle}
@@ -773,7 +893,7 @@ const DocFilesUpload = async () => {
         buttonStyle={styles.inputContainerDropdownRow}
               buttonTextStyle={{fontSize:14,}}
               renderDropdownIcon={isOpened => {
-                return <FontAwesome name={isOpened ? 'chevron-up' : 'chevron-down'} color={'#444'} size={15} />;
+                return <FontAwesome name={isOpened ? 'chevron-up' : 'chevron-down'} color={'#444'} size={12} />;
               }}
               dropdownIconPosition={'right'}
               dropdownStyle={styles.dropdown2DropdownStyle}
@@ -938,22 +1058,63 @@ const DocFilesUpload = async () => {
        </View>
 
        <Text style={{fontSize:14,paddingRight: "59%",}}>
-       {!funds  && (
-        <Text style={{color: 'red'}}>*</Text>
-      )}
+       {/* {!item && !price  && ( */}
+        {/* <Text style={{color: 'red'}}>*</Text> */}
+      {/* )} */}
 
        Use of Funds</Text>
+       <Text style={{fontSize:14,paddingRight: "1%",color: 'red' }}>Please specify a list of your capital funds</Text>
+
+       <View style={{flexDirection:'row'}}>
          <View style={styles.inputContainer}>
          <TextInput
-            multiline={true}
-        style={styles.inputdetails}
-        numberOfLines={4} // You can adjust the number of lines as needed
-        placeholder="Use of Funds"
-        onChangeText={(text) => setFunds(text)}
-        value={funds}
+        style={styles.inputrow}
+        placeholder="Item"
+        onChangeText={(text) => setItem(text)}
+        value={item}
+        autoCapitalize="none"
+        onSubmitEditing={handleValidationFunds}
+
          />
    
        </View>
+
+       <View style={styles.inputContainer}>
+         <TextInput
+        style={styles.inputrow}
+        placeholder="Price"
+        onChangeText={(text) => setPrice(text)}
+        value={price}
+        keyboardType="numeric"
+        onSubmitEditing={handleValidationFunds}
+
+
+         />
+   
+       </View>
+
+       {/* <TouchableOpacity
+        onPress={() =>
+            handleValidationFunds()
+        }>
+      <MaterialIcons name="add-task" size={36} color="black" />
+      </TouchableOpacity> */}
+       </View>
+
+       {useFunds.map((item, index) => (
+        <View key={index} style={styles.fundsContainer}>
+          <View style={styles.infoContainer}>
+            <Text style={styles.name}>Product {index+1}: {item.product}</Text>
+            <Text style={styles.price}>Price: P{Number(item.amount).toLocaleString()}</Text>
+          </View>
+          <TouchableOpacity  onPress={() => removeItem(item)} style={styles.removeButton}>
+          <MaterialIcons name="delete-forever" size={24} color="black" />
+
+          </TouchableOpacity>
+        </View>
+      ))}
+
+
 
        <Text style={{fontSize:14,paddingRight: "1%",}}>Attach supporting documents</Text>
        {fileSupDoc && <Text numberOfLines={1} ellipsizeMode={'middle'}  style={{fontSize:14}} >File Attached: { PDFdocFileName }</Text>}
@@ -981,15 +1142,15 @@ const DocFilesUpload = async () => {
          <TextInput
            style={styles.input1}
            placeholder="Business Capital"
-           onChangeText={(numeric) => setbusinessCapital(numeric)}
-           value={businessCapital}
-           keyboardType="numeric"
-           onSubmitEditing={handleOnBlur}
-           maxLength={7}
+          //  onChangeText={(numeric) => setbusinessCapital(numeric)}
+           value={Number(businessCapital).toLocaleString()}
+          //  keyboardType="numeric"
+          //  onSubmitEditing={handleOnBlur}
+           editable={false}
          />
    
        </View>
-       {isTableVisible && (
+       { businessCapital > 0 && (
        <View style={styles.tableContainer}>
 
        <ScrollView horizontal={true} style={{ marginTop: 10 }}>
@@ -1003,30 +1164,31 @@ const DocFilesUpload = async () => {
 
           </View>
             <View style={styles.tableRow}>
-              <Text style={styles.tableCell}>{businessCapital}</Text>
+              <Text style={styles.tableCell}>{businessCapital.toLocaleString()}</Text>
               <Text style={styles.tableCell}>5%</Text>
-              <Text style={styles.tableCell}>6</Text>
-              <Text style={styles.tableCell}>{totalReturn}</Text>
+              <Text style={styles.tableCell}>12</Text>
+              <Text style={styles.tableCell}>{totalReturn.toLocaleString()}</Text>
 
             </View>
         </View>
       </ScrollView>
 
-      <ScrollView horizontal={true} style={{ marginTop: 10 }}>
-        <View style={styles.table}>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableHeader}>Amount</Text>
-            <Text style={styles.tableHeader}>Due Date</Text>
-          </View>
-          {installments.map((item, index) => (
-            <View key={index} style={styles.tableRow}>
-              <Text style={styles.tableCell}>{item.installment}</Text>
-              <Text style={styles.tableCell}>{item.date}</Text>
-
-            </View>
-          ))}
+      { businessCapital > 0 && installments.length > 0 ? (
+  <ScrollView horizontal={true} style={{ marginTop: 10 }}>
+    <View style={styles.table}>
+      <View style={styles.tableRow}>
+        <Text style={styles.tableHeader}>Amount</Text>
+        <Text style={styles.tableHeader}>Due Date</Text>
+      </View>
+      {installments.map((item, index) => (
+        <View key={index} style={styles.tableRow}>
+          <Text style={styles.tableCell}>{item.installment.toLocaleString()}</Text>
+          <Text style={styles.tableCell}>{item.maxdate}</Text>
         </View>
-      </ScrollView>
+      ))}
+    </View>
+  </ScrollView>
+) : null}
 
       </View>
       )}
@@ -1087,6 +1249,7 @@ const styles = StyleSheet.create({
       backgroundColor: "#fff",
       alignItems: "center",
       justifyContent: "center",
+      maxHeight:"94%"
     },
     button: {
       width: "100%",
@@ -1225,7 +1388,7 @@ const styles = StyleSheet.create({
     inputrow: {
       // flex: 1,
       height: 45,
-      width:"50%",
+      width:"48%",
     },
   
   
@@ -1355,9 +1518,33 @@ const styles = StyleSheet.create({
   },
 
 
+  infoContainer: {
+    marginLeft: 10,
+    flex: 1,
+  },
+  name: {
+    fontSize: 16,
+  },
+  price: {
+    fontSize: 16,
+    color: '#888',
+  },
+  removeButton: {
+    alignItems: 'center',
+  },
+  fundsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    shadowColor: '#cccccc',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 1,
+    backgroundColor: '#fff',
+    marginBottom: 10,
+  },
 
-
-    
     
   
   });

@@ -18,7 +18,7 @@ import {NETWORK_ADDPOCKET} from '@env';
 
 
 
-const Paypal = ({data, type, hidePopup}) => {
+const PaypalMissed = ({data, type, hidePopup}) => {
 
   const navigation = useNavigation();
   //data both from INVEST and INVESTIRSRETURN
@@ -28,9 +28,17 @@ const Paypal = ({data, type, hidePopup}) => {
   const installmentLength = data[3];
 
   
+  const amountMissed = amountInputted.reduce((sum, current) => {
+    return sum + parseFloat(current.installment);
+  }, 0);
 
 
-console.log(installmentID)
+console.log(amountInputted)
+console.log(amountMissed)
+
+console.log(bussinessID)
+console.log(installmentLength)
+
   const transactype = type[0] // if its invest or returnloan 
 
 const totalReturn = data[1];//from ibvest file
@@ -295,8 +303,8 @@ function onMessage(e) {
     // console.log("Purchase Unit Reference ID: " + (purchaseUnit.reference_id ?? 'N/A'));
     const amount = purchaseUnit.amount?.value ?? 0; 
     
-    console.log(amount);
-    if (amount <= 0) {
+    console.log(amountMissed);
+    if (amountMissed <= 0) {
       // Display an alert or handle the case where the amount is zero or negative
       ToastAndroid.show("Invalid amount. Please enter a valid amount.!",
       ToastAndroid.SHORT, ToastAndroid.BOTTOM);
@@ -352,24 +360,26 @@ if(transactype === "invest")
 else if(transactype === "returnloan")
 {
     // Check if the amount is not empty
-    if (amount) {
-      Axios.post(`${NETWORK_ADDPOCKET}/TransactionInvest`,{
-      user:user,
-      amount: amount,
+    if (amountMissed) {
+      Axios.post(`${NETWORK_ADDPOCKET}/payreturnmissedloan`,{
+      user_id:user,
+      installment: amountInputted,
       type:transactype,
       name: name,
       email:email,
+      buss_id:bussinessID,
       formattedDate:formattedDate,
-      paypal_datalog: data
+      installmentLength:installmentLength,
+      paypalDatalog: data
 
     })
   
     .then((res) => {
-      if (transactype === "returnloan") {
-        ReturnLoan(res.data.results.insertId,installmentLength); // pass the TRANSACTION ID to the returnloan
-      }
+    //   if (transactype === "returnloan") {
+    //     ReturnLoan(res.data.results.insertId,installmentLength); // pass the TRANSACTION ID to the returnloan
+    //   }
 
-      ToastAndroid.show("Paypal Successfully invested!",
+      ToastAndroid.show("Paypal Successfully Paid!",
       ToastAndroid.SHORT, ToastAndroid.BOTTOM);
       navigation.navigate("Entreprenuer");
     })
@@ -481,7 +491,7 @@ else if(transactype === "returnloan")
             <WebView
               // source={{ uri: `https://timely-tiramisu-0a768c.netlify.app/?amount=${amountInputted}` }}
               // source={{ uri: `http://192.168.254.127:3000/?amount=${amountInputted}` }}
-              source={{ uri: `https://charming-tarsier-f7288a.netlify.app/?amount=${amountInputted}` }}
+              source={{ uri: `https://charming-tarsier-f7288a.netlify.app/?amount=${amountMissed}` }}
 
               style={{ flex: 1 }}
               onLoadStart={() => {
@@ -546,4 +556,4 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 });
-export default Paypal;
+export default PaypalMissed;

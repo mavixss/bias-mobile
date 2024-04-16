@@ -24,14 +24,15 @@ import {
   import { useNavigation } from "@react-navigation/native";
   
   import { StatusBar } from "expo-status-bar";
-  import Upload from "./Upload";
 
   import SocialIcon from 'react-native-vector-icons/AntDesign';
-
+  import { MaterialIcons } from '@expo/vector-icons';
 
 export const logoutIcon = (<AntDesign name="logout" size={40} color="black" />);
 export const editIcon = (<FontAwesome name="edit" size={40} color="black" />);
 export const questionIcon = (<SocialIcon name="questioncircleo" size={40} color="black" />);
+export const security = (<MaterialIcons name="security" size={40} color="black" />);
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
@@ -54,6 +55,8 @@ const handleLogout = () => {
 
 const removeItem = async () => {
 await AsyncStorage.removeItem('userID' ,(error) => console.log(error))
+await AsyncStorage.removeItem('userType' ,(error) => console.log(error))
+
 .then(
 	ToastAndroid.show("Logout",
 	ToastAndroid.SHORT,ToastAndroid.BOTTOM),
@@ -62,7 +65,6 @@ await AsyncStorage.removeItem('userID' ,(error) => console.log(error))
 
  )
 }
-
 
 
 
@@ -88,6 +90,26 @@ await AsyncStorage.removeItem('userID' ,(error) => console.log(error))
 		
 		  
 		</TouchableOpacity>
+
+		<TouchableOpacity  style={styles.container}
+		        onPress={() => navigation.navigate('EditPass')}>
+		
+
+		  <Text  style={styles.avatar}>
+		  {security}
+		  </Text>
+
+		  <View style={styles.content}>
+		  <View style={styles.mainContent}>
+		  <View style={styles.text}>
+            <Text style={styles.name}> Update Password</Text>
+		  </View>
+		  </View>
+		  </View>
+		
+		  
+		</TouchableOpacity>
+
 
 		<TouchableOpacity  style={styles.container}>
 		

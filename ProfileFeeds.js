@@ -25,13 +25,9 @@ import {
   import { useRoute } from '@react-navigation/native';
   import React, { useEffect, useState } from "react";
   import { useNavigation } from "@react-navigation/native";
-  import { StatusBar } from "expo-status-bar";
-  import Upload from "./Upload";
-  import { Modal } from "react-native-paper";
-  import Invest from "./Invest";
   import LoadingScreen from "./LoadingScreen";
   import Profile from "./Profile";
-  import {NETWORK_ADD} from '@env';
+  import {NETWORK_ADDPOCKET} from '@env';
 
 
   
@@ -105,16 +101,14 @@ useEffect(() => {
   // Simulate an API call or data loading process
   setTimeout(() => {
     setIsLoading(false); // Set isLoading to false when data is loaded
-  }, 2000); // Simulate a 2-second loading time
+  }, 5000); // Simulate a 2-second loading time
 }, []);
 
 
 
 useEffect(() => {
-  // Axios.get("http://192.168.8.103:19001/getFeedsDisplay")
-    Axios.get(`${NETWORK_ADD}:19001/getFeedsDisplay`)
+    Axios.get(`${NETWORK_ADDPOCKET}/getFeedsDisplay`)
     .then((result) => {setnewsfeedsData(result.data)
-    // console.log(result.data[0].buss_user_id);
     }) 
   .catch((error) => console.log(error))
   },[newsfeedsData]);
@@ -127,35 +121,27 @@ useEffect(() => {
   const[dataFeeds, setDataFeeds] = useState([]);
 
   const msg = "Requested to invest to your business";
-  const status = "Cancel";
+  const status = "cancel";
 const notifMsg = dataID + msg;
     // console.log(dataID);
 
     useEffect(() => {
-      // Axios.post("http://192.168.8.103:19001/testID",{
-        Axios.post(`${NETWORK_ADD}:19001/testID`,{
+        Axios.post(`${NETWORK_ADDPOCKET}/testID`,{
         user:user
       })
-        // .then((res) => setData(res.data.results[0]))
         .then((res) => setData(res.data.results)
         )
-
-        //  .then((data) => setData(data)
         .catch((error) => console.log(error));
 
     }, [dataID]);
 
 
     useEffect(() => {
-        // Axios.post("http://192.168.8.103:19001/ProfileFeeds",{
-          Axios.post(`${NETWORK_ADD}:19001/ProfileFeeds`,{
+          Axios.post(`${NETWORK_ADDPOCKET}/ProfileEntrepFeeds`,{
           user:user
         })
-          // .then((res) => setData(res.data.results[0]))
-          .then((res) => setDataFeeds(res.data.results)
+          .then((res) => setDataFeeds(res.data.result)
           )
-  
-          //  .then((data) => setData(data)
           .catch((error) => console.log(error));
   
       }, [dataFeeds]);
@@ -179,33 +165,10 @@ const notifMsg = dataID + msg;
 
 
 
-  const Notfication = (findBussinessUser, findBussinessID) => {
-    // Axios.post("http://192.168.8.103:19001/notif", {
-      Axios.post(`${NETWORK_ADD}:19001/notif`, {
-
-      notifMsg: notifMsg,
-      user:user,
-      createdAt:createdAt,
-      findBussinessUser: findBussinessUser,
-     findBussinessID: findBussinessID,
-
-
-    })
-      .then((res) =>  
-      // {
-
-        Test(),
-        ToastAndroid.show("Investment sucessfully requested.",
-        ToastAndroid.SHORT,ToastAndroid.BOTTOM),
-      )
-      .catch((error) => console.log(error));
-      
-  };
 
 
   const Status = (findBussinessID) => {
-    // Axios.post("http://192.168.8.103:19001/BussStatus", {
-      Axios.post(`${NETWORK_ADD}:19001/BussStatus`, {
+      Axios.post(`${NETWORK_POCKETWIFI}:19001/BussStatus`, {
       status: status,
       bussID:findBussinessID,
 
@@ -266,6 +229,35 @@ const handleRefresh = () => {
 };
 
 
+const calculateTotalInvest = (investment) => {
+  if (Array.isArray(investment)) {
+    const investDetails = investment.map((item) => item.invest_amount);
+
+    let totalSum = 0;
+
+    for (let i = 0; i < investDetails.length; i++) {
+      totalSum += parseFloat(investDetails[i]);
+    }
+
+    return totalSum;
+  } else {
+    return 0;
+  }
+};
+
+const handleAbbreviatedValue = (value) => {
+  if (value >= 1000000000) {
+    return (value / 1000000000).toFixed(1) + "B";
+  }
+  if (value >= 1000000) {
+    return (value / 1000000).toFixed(1) + "M";
+  }
+  if (value >= 1000) {
+    return (value / 1000).toFixed(1) + "K";
+  } else {
+    return value;
+  }
+};
 
 
   
@@ -307,10 +299,10 @@ const handleRefresh = () => {
               <View style={styles.header}>
                 <Image
                   style={styles.avatar}
-                  source={require("./assets/profilee.png")}
+                  source={item.user_profile ? { uri: item.user_profile } : require("./assets/prrofilee.png")} 
                 />
                 <View>
-            <Text style={styles.name}> {item.user_id} {item.user_fname} {item.user_lname}
+            <Text style={styles.name}>{item.buss_name}
 			{/* {item.name} */}
 			</Text>
               <Text style={styles.date}>{formatDate(item.buss_created_at)}</Text>
@@ -319,19 +311,37 @@ const handleRefresh = () => {
               </View>
               </View>
               
-              <Text style={styles.description}> {item.buss_id} {item.buss_details}</Text>
+              <Text style={styles.description}>{item.buss_summary}</Text>
               <Image style={{ height: 320, width: '100%' }}  source={{uri: item.buss_photo}} />
             
-            <View style={styles.actions}>
-                <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
-              <Text style={styles.actionText}>Business Status:</Text>
-              <Text style={styles.actionCount}>{item.buss_status}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
-              <Text style={styles.actionText}>Capital:</Text>
-              <Text style={styles.actionCount}>{item.buss_capital}</Text>
-            </TouchableOpacity>
-            </View>
+              <View style={styles.actions}>
+             <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
+           <Text style={styles.actionText}>Status:</Text>
+           <Text style={styles.actionCount}>{item.buss_status}</Text>
+         </TouchableOpacity>
+
+
+         <View style={styles.actionButton}>
+           <Text style={styles.actionText}>Capital:</Text>
+           <Text style={styles.actionCount}>{handleAbbreviatedValue(item.buss_capital)}</Text>
+         </View>
+         {isNaN(item.buss_capital - calculateTotalInvest(item.investments)) ? (
+           null
+           ):(
+         <View  style={styles.actionButton}>
+         <Text style={styles.actionText}>Remaining:</Text>
+           <Text style={styles.actionCount}>
+           {handleAbbreviatedValue(
+                         parseFloat(
+                           item.buss_capital -
+                             calculateTotalInvest(item.investments)
+                         )
+                       )}              
+           </Text>
+           </View>
+           )}
+
+         </View>
 
 
 
@@ -341,30 +351,20 @@ const handleRefresh = () => {
             <Pressable onPress={() => {}} style={styles.actionButton}>
             <TouchableOpacity
              style={[styles.button3, styles.buttonOpen]}
-             onPress={() => {Status(item.buss_id)}}
-
-            //  onPress={() => setModalVisible(true)}
-          //   onPress={() =>
-          //  {
-          // //pass data to invest file
-          // setCapital(item.buss_capital),
-          // HandlepopUp()
-          //  }}
-           
-           >
+             onPress={() => {Status(item.buss_id)}}>
             <Text style={styles.textStyle}>Cancel</Text>
            </TouchableOpacity>
             </Pressable>
 
-            <Pressable onPress={() => {}} style={styles.actionButton}>
+            {/* <Pressable onPress={() => {}} style={styles.actionButton}>
             <TouchableOpacity
              style={[styles.button3, styles.buttonOpen]}
-             onPress={() => navigation.navigate("Investor",{ bussid: [item.buss_id]})} 
+             onPress={() => navigation.navigate("EditBusiness",{ bussid: [item.buss_id]})} 
                            
             >
-                <Text style={styles.textStyle}>View Investors</Text>
+                <Text style={styles.textStyle}>Edit</Text>
            </TouchableOpacity>
-            </Pressable>
+            </Pressable> */}
 
 
             </View>
@@ -382,8 +382,6 @@ const handleRefresh = () => {
   )}
 
 
-{/* //for pop up in investment */}
-{ visible ? <Invest data={[capital]} hidePopup={HandlepopUp}  />: ""}
 
 
 
@@ -594,10 +592,10 @@ const handleRefresh = () => {
         width:"60%",
       },
       buttonOpen: {
-        backgroundColor: '#F194FF',
+        backgroundColor: "#ff0000",
       },
       buttonClose: {
-        backgroundColor: '#2196F3',
+        backgroundColor: "#ff0000",
       },
       textStyle: {
         color: 'white',
